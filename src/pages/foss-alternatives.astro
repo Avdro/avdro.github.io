@@ -1,0 +1,262 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+---
+
+<BaseLayout
+    title='FOSS Alternative Finder'
+    description='Find free and open-source alternatives to popular paid software — Photoshop, Office, Notion, Spotify and 60+ more, with licenses and platforms.'
+>
+    <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
+        FOSS Alternative Finder
+    </h1>
+
+    <p class='text-center text-stone-600 dark:text-stone-300 max-w-3xl mx-auto -mt-2 mb-8'>
+        Paying for software you don't have to? Every alternative below is free, open source, and
+        developed by a community — not a subscription department.
+    </p>
+
+    <div class='not-prose max-w-5xl mx-auto px-4'>
+        <input
+            id='f-search'
+            type='search'
+            placeholder='Search proprietary or open-source software, e.g. "photoshop"…'
+            class='w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-4 py-2.5'
+        />
+
+        <div class='flex flex-wrap justify-center items-center gap-2 my-4' id='f-cats'></div>
+
+        <div class='flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mb-6'>
+            <label class='text-sm text-stone-600 dark:text-stone-300'>
+                Sort
+                <select
+                    id='f-sort'
+                    class='ml-2 rounded-md border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-2 py-1'
+                >
+                    <option value='az'>A → Z (proprietary)</option>
+                    <option value='za'>Z → A (proprietary)</option>
+                    <option value='cat'>By category</option>
+                </select>
+            </label>
+            <p id='f-count' class='text-sm text-stone-500 dark:text-stone-400'></p>
+        </div>
+
+        <div id='alt-list' class='grid gap-4 md:grid-cols-2'></div>
+    </div>
+
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-10'>
+        <h2>About this tool</h2>
+        <p>
+            The FOSS Alternative Finder is a hand-curated mapping of popular paid and proprietary
+            software to genuinely free and open-source replacements. Every alternative on this page
+            ships under a recognized open-source license (MIT, GPL, Apache, MPL and similar), is
+            developed by a community or a foundation, and costs nothing to use — for personal and,
+            in almost all cases, commercial work too. Nothing here is sponsored: we list what we
+            would actually install on our own machines.
+        </p>
+
+        <h2>How to use it</h2>
+        <ol>
+            <li>Type the name of the tool you are replacing — for example “photoshop” — in the search box.</li>
+            <li>Narrow the list with the category chips, or switch the sort to browse by category.</li>
+            <li>Click the green name to open the official project website and download it from there.</li>
+        </ol>
+        <p>
+            Always download open-source software from its official site. That is the only way to be
+            sure you get the real, unmodified program.
+        </p>
+
+        <h2>Why choose open source at all?</h2>
+        <p>
+            Three practical reasons. First, cost: there is no subscription, no trial that expires,
+            and no features locked behind a “pro” tier. Second, freedom: the license guarantees you
+            can use, study, modify and share the software — it will not be taken away from you if a
+            company changes its mind. Third, privacy and file formats: most open-source projects
+            store your data in open standards, so you are never locked into one ecosystem.
+        </p>
+
+        <h2>Are open-source alternatives as good?</h2>
+        <p>
+            For everyday work — documents, photo editing, video cutting, notes, messaging, backups —
+            yes, comfortably. Projects like LibreOffice, GIMP, Blender and VLC are used professionally
+            every day and have been refined for decades. A fair warning: a few niche features of
+            industry tools may be missing or work differently, so expect a short adjustment period.
+            The good news is that trying costs you nothing but a download.
+        </p>
+
+        <h2>Can I run these on Windows or macOS?</h2>
+        <p>
+            Yes — the vast majority are cross-platform, and the badges on each card show where each
+            one runs. A “Self-hosted” label means the software runs on your own server or computer
+            and you connect to it from your browser or phone; that is easier than it sounds, and it
+            means nobody else hosts your data.
+        </p>
+
+        <h2>Missing something?</h2>
+        <p>
+            This list grows over time. If your favorite open-source replacement is not here, or a
+            pairing looks wrong, write to <a href='/contact-us/'>admin@getfoss.org</a> and tell us
+            what to add.
+        </p>
+    </article>
+</BaseLayout>
+
+<script>
+    interface Alt {
+        from: string; to: string; lic: string; cat: string
+        plat: string; note: string; url: string
+    }
+
+    const DATA: Alt[] = [
+        { from: 'Adobe Illustrator', to: 'Inkscape', lic: 'GPL-3.0', cat: 'Graphics & Design', plat: 'Win · Mac · Linux', note: 'Full-featured vector editor with native SVG support.', url: 'https://inkscape.org' },
+        { from: 'Adobe InDesign', to: 'Scribus', lic: 'GPL-2.0+', cat: 'Graphics & Design', plat: 'Win · Mac · Linux', note: 'Professional page layout for print-ready PDFs.', url: 'https://www.scribus.net' },
+        { from: 'Figma', to: 'Penpot', lic: 'MPL-2.0', cat: 'Graphics & Design', plat: 'Web · Self-hosted', note: 'UI design and prototyping built on open web standards.', url: 'https://penpot.app' },
+        { from: 'Sketch', to: 'Penpot', lic: 'MPL-2.0', cat: 'Graphics & Design', plat: 'Web · Self-hosted', note: 'Vector design tool that runs entirely in the browser.', url: 'https://penpot.app' },
+        { from: 'AutoCAD', to: 'FreeCAD', lic: 'LGPL-2.1+', cat: 'Graphics & Design', plat: 'Win · Mac · Linux', note: 'Parametric 3D CAD for engineering and product design.', url: 'https://www.freecad.org' },
+        { from: 'Microsoft Visio', to: 'diagrams.net', lic: 'Apache-2.0', cat: 'Graphics & Design', plat: 'Web · Desktop', note: 'Flowcharts, network maps and UML diagrams.', url: 'https://www.drawio.com' },
+        { from: 'XMind', to: 'Freeplane', lic: 'GPL-2.0+', cat: 'Graphics & Design', plat: 'Win · Mac · Linux', note: 'Classic mind mapping with a mature feature set.', url: 'https://www.freeplane.org' },
+        { from: 'SketchUp', to: 'Blender', lic: 'GPL-3.0', cat: 'Graphics & Design', plat: 'Win · Mac · Linux', note: '3D modeling, sculpting, animation and rendering.', url: 'https://www.blender.org' },
+        { from: 'Unity', to: 'Godot', lic: 'MIT', cat: 'Graphics & Design', plat: 'Win · Mac · Linux', note: 'Complete 2D/3D game engine with no royalties or lock-in.', url: 'https://godotengine.org' },
+        { from: 'Adobe Photoshop', to: 'GIMP', lic: 'GPL-3.0', cat: 'Photo Editing', plat: 'Win · Mac · Linux', note: 'The classic open-source image editor with layers and plugins.', url: 'https://www.gimp.org' },
+        { from: 'Adobe Lightroom', to: 'darktable', lic: 'GPL-3.0', cat: 'Photo Editing', plat: 'Win · Mac · Linux', note: 'Non-destructive RAW photo workflow and editing.', url: 'https://www.darktable.org' },
+        { from: 'Adobe Camera Raw', to: 'RawTherapee', lic: 'GPL-3.0', cat: 'Photo Editing', plat: 'Win · Mac · Linux', note: 'Powerful RAW developer with fine-grained controls.', url: 'https://rawtherapee.com' },
+        { from: 'Corel Painter', to: 'Krita', lic: 'GPL-3.0', cat: 'Photo Editing', plat: 'Win · Mac · Linux', note: 'Digital painting with over a hundred brush engines.', url: 'https://krita.org' },
+        { from: 'Paint.NET', to: 'Pinta', lic: 'MIT', cat: 'Photo Editing', plat: 'Win · Mac · Linux', note: 'Simple image editor in the spirit of Paint.NET.', url: 'https://www.pinta-project.com' },
+        { from: 'Canva', to: 'Penpot', lic: 'MPL-2.0', cat: 'Photo Editing', plat: 'Web · Self-hosted', note: 'Template-driven design for posts, posters and mockups.', url: 'https://penpot.app' },
+        { from: 'Adobe Premiere Pro', to: 'Kdenlive', lic: 'GPL-3.0', cat: 'Video', plat: 'Win · Mac · Linux', note: 'Multitrack video editor with effects and proxies.', url: 'https://kdenlive.org' },
+        { from: 'Final Cut Pro', to: 'Shotcut', lic: 'GPL-3.0', cat: 'Video', plat: 'Win · Mac · Linux', note: 'Timeline editor supporting hundreds of formats.', url: 'https://shotcut.org' },
+        { from: 'DaVinci Resolve', to: 'Kdenlive', lic: 'GPL-3.0', cat: 'Video', plat: 'Win · Mac · Linux', note: 'Editing and color grading without the dongle.', url: 'https://kdenlive.org' },
+        { from: 'Adobe After Effects', to: 'Natron', lic: 'GPL-2.0', cat: 'Video', plat: 'Win · Mac · Linux', note: 'Node-based compositing for visual effects.', url: 'https://natrongithub.github.io' },
+        { from: 'YouTube', to: 'PeerTube', lic: 'AGPL-3.0', cat: 'Video', plat: 'Web · Self-hosted', note: 'Federated video hosting on the Fediverse.', url: 'https://joinpeertube.org' },
+        { from: 'Ableton Live', to: 'Ardour', lic: 'GPL-2.0+', cat: 'Audio & Music', plat: 'Win · Mac · Linux', note: 'Digital audio workstation for recording and mixing.', url: 'https://ardour.org' },
+        { from: 'FL Studio', to: 'LMMS', lic: 'GPL-2.0+', cat: 'Audio & Music', plat: 'Win · Mac · Linux', note: 'Beat making and synthesis with built-in instruments.', url: 'https://lmms.io' },
+        { from: 'Adobe Audition', to: 'Audacity', lic: 'GPL-3.0', cat: 'Audio & Music', plat: 'Win · Mac · Linux', note: 'Multitrack audio recording and editing.', url: 'https://www.audacityteam.org' },
+        { from: 'Spotify', to: 'Navidrome', lic: 'GPL-3.0', cat: 'Audio & Music', plat: 'Self-hosted', note: 'Stream your own music library to any device.', url: 'https://www.navidrome.org' },
+        { from: 'iTunes', to: 'Strawberry', lic: 'GPL-3.0', cat: 'Audio & Music', plat: 'Win · Mac · Linux', note: 'Music library player and collection manager.', url: 'https://www.strawberrymusicplayer.org' },
+        { from: 'Audible', to: 'Audiobookshelf', lic: 'GPL-3.0', cat: 'Audio & Music', plat: 'Self-hosted', note: 'Host and stream your audiobooks and podcasts.', url: 'https://www.audiobookshelf.org' },
+        { from: 'Microsoft Office', to: 'LibreOffice', lic: 'MPL-2.0', cat: 'Office & Docs', plat: 'Win · Mac · Linux', note: 'Writer, Calc and Impress — open formats, zero cost.', url: 'https://www.libreoffice.org' },
+        { from: 'Google Docs', to: 'OnlyOffice', lic: 'AGPL-3.0', cat: 'Office & Docs', plat: 'Web · Self-hosted', note: 'Office suite with real-time collaboration.', url: 'https://www.onlyoffice.com' },
+        { from: 'Adobe Acrobat', to: 'Okular', lic: 'GPL-2.0+', cat: 'Office & Docs', plat: 'Win · Mac · Linux', note: 'PDF reader with annotations and form filling.', url: 'https://okular.kde.org' },
+        { from: 'QuickBooks', to: 'GnuCash', lic: 'GPL-3.0', cat: 'Office & Docs', plat: 'Win · Mac · Linux', note: 'Double-entry accounting for small business and home.', url: 'https://www.gnucash.org' },
+        { from: 'Google Forms', to: 'LimeSurvey', lic: 'GPL-3.0', cat: 'Office & Docs', plat: 'Web · Self-hosted', note: 'Surveys and questionnaires with full data ownership.', url: 'https://www.limesurvey.org' },
+        { from: 'Calendly', to: 'Cal.com', lic: 'AGPL-3.0', cat: 'Office & Docs', plat: 'Web · Self-hosted', note: 'Scheduling links for individuals and teams.', url: 'https://cal.com' },
+        { from: 'Airtable', to: 'NocoDB', lic: 'AGPL-3.0', cat: 'Office & Docs', plat: 'Web · Self-hosted', note: 'Spreadsheet-style databases over your own data.', url: 'https://nocodb.com' },
+        { from: 'Notion', to: 'AppFlowy', lic: 'AGPL-3.0', cat: 'Notes & Tasks', plat: 'Win · Mac · Linux', note: 'Wikis, docs and databases with offline sync.', url: 'https://appflowy.io' },
+        { from: 'Evernote', to: 'Joplin', lic: 'AGPL-3.0', cat: 'Notes & Tasks', plat: 'Win · Mac · Linux', note: 'Notebooks with web clipping and end-to-end sync.', url: 'https://joplinapp.org' },
+        { from: 'Microsoft OneNote', to: 'Joplin', lic: 'AGPL-3.0', cat: 'Notes & Tasks', plat: 'Win · Mac · Linux', note: 'Hierarchical notebooks that import Evernote files.', url: 'https://joplinapp.org' },
+        { from: 'Obsidian', to: 'Logseq', lic: 'AGPL-3.0', cat: 'Notes & Tasks', plat: 'Win · Mac · Linux', note: 'Outliner with local Markdown files and backlinks.', url: 'https://logseq.com' },
+        { from: 'Todoist', to: 'Super Productivity', lic: 'MIT', cat: 'Notes & Tasks', plat: 'Win · Mac · Linux · Web', note: 'Task board with time tracking and Pomodoro.', url: 'https://super-productivity.com' },
+        { from: 'Pocket', to: 'Wallabag', lic: 'MIT', cat: 'Notes & Tasks', plat: 'Web · Self-hosted', note: 'Save articles to read later, ad-free.', url: 'https://wallabag.org' },
+        { from: 'Feedly', to: 'FreshRSS', lic: 'AGPL-3.0', cat: 'Notes & Tasks', plat: 'Web · Self-hosted', note: 'Self-hosted RSS reader with a mobile-friendly UI.', url: 'https://freshrss.org' },
+        { from: 'Duolingo', to: 'Anki', lic: 'AGPL-3.0', cat: 'Notes & Tasks', plat: 'Win · Mac · Linux · Web', note: 'Spaced-repetition flashcards that really stick.', url: 'https://apps.ankiweb.net' },
+        { from: 'Slack', to: 'Zulip', lic: 'Apache-2.0', cat: 'Communication', plat: 'Web · Self-hosted', note: 'Threaded team chat that stays readable.', url: 'https://zulip.com' },
+        { from: 'Zoom', to: 'Jitsi Meet', lic: 'Apache-2.0', cat: 'Communication', plat: 'Web · Self-hosted', note: 'Video conferences with no account needed.', url: 'https://jitsi.org' },
+        { from: 'Microsoft Teams', to: 'Jitsi Meet', lic: 'Apache-2.0', cat: 'Communication', plat: 'Web · Self-hosted', note: 'Meetings and screen sharing you can self-host.', url: 'https://jitsi.org' },
+        { from: 'WhatsApp', to: 'Signal', lic: 'AGPL-3.0', cat: 'Communication', plat: 'Desktop · Mobile', note: 'End-to-end encrypted messaging from a non-profit.', url: 'https://signal.org' },
+        { from: 'Discord', to: 'Element', lic: 'Apache-2.0', cat: 'Communication', plat: 'Web · Desktop · Mobile', note: 'Communities on the decentralised Matrix network.', url: 'https://element.io' },
+        { from: 'Gmail', to: 'Thunderbird', lic: 'MPL-2.0', cat: 'Communication', plat: 'Win · Mac · Linux', note: 'Desktop email, calendar and chat in one app.', url: 'https://www.thunderbird.net' },
+        { from: 'Dropbox', to: 'Syncthing', lic: 'MPL-2.0', cat: 'Cloud & Sync', plat: 'Win · Mac · Linux', note: 'Peer-to-peer folder sync with no cloud middleman.', url: 'https://syncthing.net' },
+        { from: 'Google Drive', to: 'Nextcloud', lic: 'AGPL-3.0', cat: 'Cloud & Sync', plat: 'Self-hosted', note: 'Files, calendar, contacts and office in one server.', url: 'https://nextcloud.com' },
+        { from: 'Google Photos', to: 'Immich', lic: 'AGPL-3.0', cat: 'Cloud & Sync', plat: 'Self-hosted', note: 'Mobile photo backup with face recognition.', url: 'https://immich.app' },
+        { from: '1Password', to: 'Bitwarden', lic: 'GPL-3.0', cat: 'Security & Privacy', plat: 'All platforms', note: 'Password manager with apps for every device.', url: 'https://bitwarden.com' },
+        { from: 'LastPass', to: 'KeePassXC', lic: 'GPL-3.0', cat: 'Security & Privacy', plat: 'Win · Mac · Linux', note: 'Offline password vault — nothing leaves your disk.', url: 'https://keepassxc.org' },
+        { from: 'Google Chrome', to: 'Firefox', lic: 'MPL-2.0', cat: 'Security & Privacy', plat: 'Win · Mac · Linux · Mobile', note: 'The independent browser backed by a non-profit.', url: 'https://www.mozilla.org' },
+        { from: 'Google Maps', to: 'Organic Maps', lic: 'GPL-3.0', cat: 'Security & Privacy', plat: 'Desktop · Mobile', note: 'Fully offline maps and navigation on OpenStreetMap data.', url: 'https://organicmaps.app' },
+        { from: 'Google Translate', to: 'LibreTranslate', lic: 'AGPL-3.0', cat: 'Security & Privacy', plat: 'Web · Self-hosted', note: 'Machine translation you can self-host.', url: 'https://libretranslate.com' },
+        { from: 'Grammarly', to: 'LanguageTool', lic: 'LGPL-2.1', cat: 'Security & Privacy', plat: 'Web · Desktop', note: 'Grammar and style checking for 30+ languages.', url: 'https://languagetool.org' },
+        { from: 'VS Code', to: 'VSCodium', lic: 'MIT', cat: 'Developer Tools', plat: 'Win · Mac · Linux', note: 'VS Code binaries without Microsoft telemetry.', url: 'https://vscodium.com' },
+        { from: 'Sublime Text', to: 'Kate', lic: 'GPL-3.0', cat: 'Developer Tools', plat: 'Win · Mac · Linux', note: 'Fast editor with split views and LSP support.', url: 'https://kate-editor.org' },
+        { from: 'Postman', to: 'Hoppscotch', lic: 'MIT', cat: 'Developer Tools', plat: 'Web · Self-hosted', note: 'Lightweight API testing for REST and GraphQL.', url: 'https://hoppscotch.io' },
+        { from: 'Docker Desktop', to: 'Podman Desktop', lic: 'GPL-2.0', cat: 'Developer Tools', plat: 'Win · Mac · Linux', note: 'Daemonless containers without license fees.', url: 'https://podman-desktop.io' },
+        { from: 'MongoDB', to: 'PostgreSQL', lic: 'PostgreSQL License', cat: 'Developer Tools', plat: 'Win · Mac · Linux', note: 'The world\'s most advanced open-source database.', url: 'https://www.postgresql.org' },
+        { from: 'VMware Workstation', to: 'VirtualBox', lic: 'GPL-2.0', cat: 'Developer Tools', plat: 'Win · Mac · Linux', note: 'Virtual machines for any guest operating system.', url: 'https://www.virtualbox.org' },
+        { from: 'GitHub Copilot', to: 'Tabby', lic: 'Apache-2.0', cat: 'Developer Tools', plat: 'Self-hosted', note: 'Self-hosted AI coding assistant, your models.', url: 'https://tabby.tabbyml.com' },
+        { from: 'Netflix', to: 'Jellyfin', lic: 'GPL-3.0', cat: 'Media & Streaming', plat: 'Self-hosted', note: 'Stream your own media collection to TVs and phones.', url: 'https://jellyfin.org' },
+        { from: 'Plex', to: 'Jellyfin', lic: 'GPL-3.0', cat: 'Media & Streaming', plat: 'Self-hosted', note: 'Media server with no accounts and no upsells.', url: 'https://jellyfin.org' },
+        { from: 'WinRAR', to: '7-Zip', lic: 'LGPL-2.1', cat: 'Everyday Tools', plat: 'Win · Mac · Linux', note: 'The archive manager that opens everything.', url: 'https://www.7-zip.org' },
+        { from: 'WinZip', to: '7-Zip', lic: 'LGPL-2.1', cat: 'Everyday Tools', plat: 'Win · Mac · Linux', note: 'Fast compression with the 7z format.', url: 'https://www.7-zip.org' },
+        { from: 'uTorrent', to: 'qBittorrent', lic: 'GPL-2.0', cat: 'Everyday Tools', plat: 'Win · Mac · Linux', note: 'Ad-free torrent client with search and RSS.', url: 'https://www.qbittorrent.org' }
+    ]
+
+    const CATS = [...new Set(DATA.map((d) => d.cat))]
+
+    const listEl = document.getElementById('alt-list') as HTMLElement
+    const countEl = document.getElementById('f-count') as HTMLElement
+    const catsEl = document.getElementById('f-cats') as HTMLElement
+    const searchEl = document.getElementById('f-search') as HTMLInputElement
+    const sortEl = document.getElementById('f-sort') as HTMLSelectElement
+
+    let q = ''
+    let cat = 'All'
+
+    const esc = (s: string) =>
+        s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+
+    const filtered = () => {
+        let items = DATA.filter(
+            (a) =>
+                (cat === 'All' || a.cat === cat) &&
+                (q === '' || (a.from + ' ' + a.to + ' ' + a.note).toLowerCase().includes(q))
+        )
+        if (sortEl.value === 'az') items = items.sort((a, b) => a.from.localeCompare(b.from))
+        else if (sortEl.value === 'za') items = items.sort((a, b) => b.from.localeCompare(a.from))
+        else items = items.sort((a, b) => a.cat.localeCompare(b.cat) || a.from.localeCompare(b.from))
+        return items
+    }
+
+    const renderChips = () => {
+        const names = ['All', ...CATS]
+        catsEl.innerHTML = names
+            .map((c) => {
+                const active = c === cat
+                const cls = active
+                    ? 'rounded-full px-3 py-1 text-sm bg-stone-900 text-white dark:bg-white dark:text-stone-900'
+                    : 'rounded-full px-3 py-1 text-sm border border-stone-300 dark:border-stone-700 hover:border-stone-500 transition-colors'
+                return `<button data-cat='${esc(c)}' class='${cls}'>${esc(c)}</button>`
+            })
+            .join('')
+        catsEl.querySelectorAll('button').forEach((b) =>
+            b.addEventListener('click', () => {
+                cat = (b as HTMLElement).dataset.cat || 'All'
+                renderChips()
+                render()
+            })
+        )
+    }
+
+    const render = () => {
+        const items = filtered()
+        countEl.textContent = `Showing ${items.length} of ${DATA.length} alternatives`
+        if (!items.length) {
+            listEl.innerHTML = ''
+            countEl.textContent = 'No matches — try a shorter search term.'
+            return
+        }
+        listEl.innerHTML = items
+            .map(
+                (a) => `
+                <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-5'>
+                    <p class='text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500'>${esc(a.cat)}</p>
+                    <p class='mt-1 break-words'>
+                        <span class='text-stone-500 dark:text-stone-400'>${esc(a.from)}</span>
+                        <span class='mx-1.5 text-stone-400'>→</span>
+                        <a href='${esc(a.url)}' target='_blank' rel='noopener noreferrer'
+                            class='text-lg font-semibold text-emerald-700 dark:text-emerald-400 hover:underline'>${esc(a.to)}</a>
+                    </p>
+                    <p class='text-sm text-stone-600 dark:text-stone-300 mt-1'>${esc(a.note)}</p>
+                    <p class='text-xs text-stone-500 dark:text-stone-400 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1'>
+                        <span class='rounded border border-stone-300 dark:border-stone-700 px-1.5 py-0.5'>${esc(a.lic)}</span>
+                        <span>${esc(a.plat)}</span>
+                    </p>
+                </div>`
+            )
+            .join('')
+    }
+
+    searchEl.addEventListener('input', () => {
+        q = searchEl.value.trim().toLowerCase()
+        render()
+    })
+    sortEl.addEventListener('change', render)
+    renderChips()
+    render()
+</script>
