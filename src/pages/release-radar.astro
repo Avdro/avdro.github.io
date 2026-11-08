@@ -4,14 +4,14 @@ import BaseLayout from '@/layouts/BaseLayout'
 
 <BaseLayout
     title='Release Radar'
-    description='The latest stable releases from 65 popular open-source projects — OBS, Godot, Bitwarden, Nextcloud, Jellyfin and more — refreshed automatically every day.'
+    description='The latest stable releases from 150 popular open-source projects — OBS, GIMP, VLC, Bitwarden, Nextcloud, Kubernetes and more — refreshed automatically every day.'
 >
     <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
         Release Radar
     </h1>
 
     <p class='text-center text-stone-600 dark:text-stone-300 max-w-3xl mx-auto -mt-2 mb-8'>
-        The newest stable versions of the open-source software you rely on — 65 projects across
+        The newest stable versions of the open-source software you rely on — 150 projects across
         eight categories, refreshed automatically every day.
     </p>
 
@@ -34,9 +34,9 @@ import BaseLayout from '@/layouts/BaseLayout'
         <p>
             Most open-source apps update quietly: a new version appears on GitHub, and unless you
             follow the project you only find out months later. This page fixes that. We track
-            <strong>65 well-known free and open-source projects</strong> — media tools, graphics
-            suites, note apps, password managers, self-hosted servers and developer tools — and
-            show their latest stable release at a glance, newest first.
+            <strong>150 well-known free and open-source projects</strong> — media tools, graphics
+            suites, note apps, password managers, self-hosted servers, programming languages and
+            developer tools — and show their latest stable version at a glance, newest first.
         </p>
 
         <h2>How fresh is this data?</h2>
@@ -45,7 +45,8 @@ import BaseLayout from '@/layouts/BaseLayout'
             time) when the site rebuilds, and again after every content update. Unlike our other
             GitHub-powered pages, the data here comes as a small ready-made file from our own
             server — so it loads instantly and is never blocked by GitHub's rate limits. Only
-            stable releases are shown; betas and release candidates are skipped automatically.
+            stable versions are shown: betas and release candidates are skipped automatically, and
+            projects that publish no formal releases (some mirrors) show their newest tag instead.
         </p>
 
         <h2>Why follow releases?</h2>
@@ -64,7 +65,7 @@ import BaseLayout from '@/layouts/BaseLayout'
             identifier, and the date tells you how fresh the release is. Click through before
             updating a self-hosted service: the changelog warns you about breaking changes and
             migration steps. Use the category chips to narrow the list — for example, only
-            self-hosted servers or only developer tools.
+            self-hosted servers or only developer tools — or search for a specific project.
         </p>
     </article>
 </BaseLayout>
@@ -76,6 +77,7 @@ import BaseLayout from '@/layouts/BaseLayout'
     }
 
     let ALL: Rel[] = []
+    let TOTAL = 0
     let cat = 'All'
     let q = ''
 
@@ -89,6 +91,7 @@ import BaseLayout from '@/layouts/BaseLayout'
         s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
 
     const rel = (iso: string) => {
+        if (!iso) return 'recently'
         const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
         if (days <= 0) return 'today'
         if (days === 1) return 'yesterday'
@@ -128,7 +131,7 @@ import BaseLayout from '@/layouts/BaseLayout'
 
     const render = () => {
         const items = filtered()
-        countEl.textContent = `Showing ${items.length} of ${ALL.length} tracked projects`
+        countEl.textContent = `Showing ${items.length} of ${TOTAL} tracked projects`
         if (!items.length) {
             listEl.innerHTML = ''
             countEl.textContent = 'No matches — try a shorter search term.'
@@ -164,6 +167,7 @@ import BaseLayout from '@/layouts/BaseLayout'
             if (!res.ok) throw new Error('HTTP ' + res.status)
             const data = await res.json()
             ALL = (data.items || []) as Rel[]
+            TOTAL = data.total || ALL.length
             if (!ALL.length) {
                 statusEl.textContent = 'No release data available yet — the list is refreshed automatically every day.'
                 return
