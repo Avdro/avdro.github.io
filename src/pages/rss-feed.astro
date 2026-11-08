@@ -1,0 +1,66 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+---
+
+<BaseLayout
+    title='RSS Feed'
+    description='Subscribe to the GetFOSS RSS feed and get every new article on free and open-source software the moment it is published.'
+>
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-4'>
+        <h1>RSS Feed</h1>
+        <p>
+            The GetFOSS RSS feed delivers every new article straight to your reader — no algorithms, no
+            accounts, no tracking. Subscribe once and never miss a guide.
+        </p>
+
+        <p class='text-center not-prose my-8'>
+            <a
+                href='/rss.xml'
+                class='inline-block rounded-md bg-stone-950 dark:bg-white text-white dark:text-stone-950 font-medium px-6 py-3'
+            >
+                Open the RSS Feed
+            </a>
+        </p>
+
+        <p class='text-center not-prose'>
+            Feed URL: <code>https://www.getfoss.org/rss.xml</code>
+        </p>
+
+        <h2>How to subscribe</h2>
+        <ol>
+            <li>Copy the feed URL above.</li>
+            <li>Open your RSS reader and choose "Add feed" (or the "+" button).</li>
+            <li>Paste the URL and save — new GetFOSS articles will appear automatically.</li>
+        </ol>
+
+        <h2>Free and open-source RSS readers</h2>
+        <p>In the spirit of this site, here are solid open-source readers to start with:</p>
+        <ul>
+            <li>
+                <strong>Thunderbird</strong> (Windows, macOS, Linux) — the well-known email client with a
+                built-in RSS reader.
+            </li>
+            <li>
+                <strong>Fluent Reader</strong> (Windows, macOS, Linux) — a modern, cross-platform desktop
+                reader.
+            </li>
+            <li>
+                <strong>Liferea</strong> (Linux) — a simple and lightweight feed reader for the GTK desktop.
+            </li>
+            <li>
+                <strong>NewsBlur</strong> (Web, iOS, Android) — an open-source reader you can use hosted or
+                self-host.
+            </li>
+            <li>
+                <strong>FreshRSS</strong> (self-hosted) — run your own feed aggregator on your own server.
+            </li>
+        </ul>
+
+        <h2>Why RSS?</h2>
+        <p>
+            RSS puts your reading list back under your control: you choose what to follow, nothing decides
+            for you, and unsubscribing is one click. It is one of the oldest and most honest corners of the
+            web — and very much in the spirit of free and open-source software.
+        </p>
+    </article>
+</BaseLayout>
