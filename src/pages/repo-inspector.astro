@@ -1,0 +1,191 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+---
+
+<BaseLayout
+    title='GitHub Repo Inspector'
+    description='Inspect any GitHub repository — stars, forks, issues, license, activity, topics and the latest release. Runs live in your browser via the public GitHub API.'
+>
+    <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
+        Repo Inspector
+    </h1>
+
+    <p class='text-center text-stone-600 dark:text-stone-300 max-w-3xl mx-auto -mt-2 mb-8'>
+        Found a tool on GitHub? Check it before you install it: is it maintained, what license does
+        it use, and when was the last release?
+    </p>
+
+    <div class='not-prose max-w-3xl mx-auto px-4'>
+        <div class='flex flex-wrap items-center justify-center gap-3'>
+            <input id='f-repo' type='text' placeholder='owner/repo — e.g. godotengine/godot'
+                class='rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-3 py-2 w-72' />
+            <button id='f-go'
+                class='rounded-lg bg-stone-900 text-white dark:bg-white dark:text-stone-900 px-5 py-2 text-sm font-semibold hover:opacity-80 transition-opacity'>Inspect</button>
+        </div>
+
+        <div class='flex flex-wrap justify-center items-center gap-2 mt-4'>
+            <span class='text-sm text-stone-500 dark:text-stone-400'>Try:</span>
+            <button data-r='godotengine/godot' class='ex rounded-full border border-stone-300 dark:border-stone-700 px-3 py-1 text-sm hover:border-stone-500 transition-colors'>godotengine/godot</button>
+            <button data-r='signalapp/Signal-Desktop' class='ex rounded-full border border-stone-300 dark:border-stone-700 px-3 py-1 text-sm hover:border-stone-500 transition-colors'>Signal-Desktop</button>
+            <button data-r='yt-dlp/yt-dlp' class='ex rounded-full border border-stone-300 dark:border-stone-700 px-3 py-1 text-sm hover:border-stone-500 transition-colors'>yt-dlp</button>
+        </div>
+
+        <p id='ins-status' class='text-center text-sm text-stone-500 dark:text-stone-400 my-6'></p>
+        <div id='ins-result' class='mt-2'></div>
+    </div>
+
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-10'>
+        <h2>What is Repo Inspector?</h2>
+        <p>
+            GitHub profiles can be misleading: a project can look alive while nobody has committed
+            to it in two years, or look tiny while it is rock solid and MIT-licensed. Repo Inspector
+            pulls the real numbers for any public repository — community size, activity, license,
+            language, topics and the latest stable release — into a single card.
+        </p>
+
+        <h2>When would I use it?</h2>
+        <ul>
+            <li><strong>Before installing a random GitHub find.</strong> Check that the project is active and has a community behind it.</li>
+            <li><strong>Before reusing code.</strong> The license row tells you what you are allowed to do — no license at all means you legally may not.</li>
+            <li><strong>Before updating a self-hosted service.</strong> The latest release box links to the changelog, which is where breaking changes are announced.</li>
+            <li><strong>Out of curiosity.</strong> See how the projects you love are really doing.</li>
+        </ul>
+
+        <h2>How to use it</h2>
+        <p>
+            Paste a repository in the form <code>owner/name</code> — the same text you see in the
+            GitHub URL — and press <strong>Inspect</strong>, or click one of the examples. The card
+            also shows <em>health notes</em>: for example, if the repository has not been pushed to
+            in over a year, or if no open-source license could be detected, we tell you so you can
+            weigh the risks yourself.
+        </p>
+
+        <h2>Privacy and limits</h2>
+        <p>
+            Everything runs in your browser against the public GitHub API; nothing is stored on our
+            side. Each inspection costs at most two requests out of the 60 per hour GitHub allows
+            unauthenticated visitors, so inspect freely — if you hit the limit, wait a few minutes.
+        </p>
+    </article>
+</BaseLayout>
+
+<script>
+    const repoEl = document.getElementById('f-repo') as HTMLInputElement
+    const goEl = document.getElementById('f-go') as HTMLButtonElement
+    const statusEl = document.getElementById('ins-status') as HTMLElement
+    const resultEl = document.getElementById('ins-result') as HTMLElement
+
+    const esc = (s: string) =>
+        s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+
+    const fmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n))
+    const day = (iso: string) => (iso || '').slice(0, 10)
+    const mb = (kb: number) => (kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB')
+    const rel = (iso: string) => {
+        const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+        if (days <= 0) return 'today'
+        if (days === 1) return 'yesterday'
+        if (days < 30) return days + ' days ago'
+        const months = Math.floor(days / 30)
+        if (months < 12) return months === 1 ? '1 month ago' : months + ' months ago'
+        const years = Math.floor(days / 365)
+        return years === 1 ? '1 year ago' : years + ' years ago'
+    }
+
+    const stat = (label: string, value: string) => `
+        <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-3 text-center'>
+            <p class='text-lg font-semibold'>${value}</p>
+            <p class='text-xs text-stone-500 dark:text-stone-400 uppercase tracking-wide'>${label}</p>
+        </div>`
+
+    const note = (text: string) => `
+        <p class='text-sm rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 px-3 py-2'>${esc(text)}</p>`
+
+    const parse = (s: string) => {
+        const m = s.trim().match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/)
+        return m ? m[1] + '/' + m[2] : ''
+    }
+
+    const run = async () => {
+        const slug = parse(repoEl.value)
+        if (!slug) {
+            statusEl.textContent = 'Enter a repository in the owner/name form, e.g. godotengine/godot.'
+            return
+        }
+        statusEl.textContent = 'Inspecting ' + slug + '…'
+        resultEl.innerHTML = ''
+        const headers = { Accept: 'application/vnd.github+json' }
+        try {
+            const res = await fetch(`https://api.github.com/repos/${slug}`, { headers })
+            if (res.status === 404) throw new Error(`Repository “${slug}” not found — check the owner/name spelling.`)
+            if (res.status === 403) throw new Error('GitHub API rate limit reached on your network. Please wait a few minutes.')
+            if (!res.ok) throw new Error('GitHub API error ' + res.status)
+            const r = await res.json()
+            const relRes = await fetch(`https://api.github.com/repos/${slug}/releases/latest`, { headers })
+            let relBox = ''
+            if (relRes.ok) {
+                const relData = await relRes.json()
+                if (relData && relData.tag_name) {
+                    relBox = `
+                        <div class='mt-4 rounded-lg border border-stone-200 dark:border-stone-800 p-4'>
+                            <p class='text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500'>Latest stable release</p>
+                            <p class='mt-1'>
+                                <a href='${esc(relData.html_url)}' target='_blank' rel='noopener noreferrer'
+                                    class='font-semibold hover:underline'>${esc(relData.tag_name)}</a>
+                                <span class='text-sm text-stone-500 dark:text-stone-400'> — published ${esc(rel(relData.published_at || ''))}</span>
+                            </p>
+                            ${relData.name && relData.name !== relData.tag_name ? `<p class='text-sm text-stone-600 dark:text-stone-300'>${esc(relData.name)}</p>` : ''}
+                        </div>`
+                }
+            }
+            const notes: string[] = []
+            const daysSincePush = (Date.now() - new Date(r.pushed_at).getTime()) / 86400000
+            if (daysSincePush > 365) notes.push('No commits for over a year — the project may be abandoned.')
+            if (!r.license) notes.push('No license detected — check before reusing or redistributing this code.')
+            if (r.archived) notes.push('This repository is archived and read-only: the project will not receive updates.')
+            const topics: string[] = Array.isArray(r.topics) ? r.topics.slice(0, 10) : []
+            resultEl.innerHTML = `
+                <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-5'>
+                    <div class='flex items-center gap-3'>
+                        <img src='${esc(r.owner?.avatar_url || '')}' alt='' class='rounded-full w-12 h-12' />
+                        <div class='min-w-0'>
+                            <a href='${esc(r.html_url)}' target='_blank' rel='noopener noreferrer'
+                                class='text-lg font-semibold break-words hover:underline'>${esc(r.full_name)}</a>
+                            <p class='text-sm text-stone-600 dark:text-stone-300 mt-0.5'>${esc(r.description || '')}</p>
+                        </div>
+                    </div>
+                    ${topics.length ? `<div class='flex flex-wrap gap-1.5 mt-3'>${topics.map((t) => `<span class='rounded-full border border-stone-300 dark:border-stone-700 px-2 py-0.5 text-xs'>${esc(t)}</span>`).join('')}</div>` : ''}
+                    <div class='grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4'>
+                        ${stat('Stars', fmt(r.stargazers_count))}
+                        ${stat('Forks', fmt(r.forks_count))}
+                        ${stat('Open issues', fmt(r.open_issues_count))}
+                        ${stat('Watchers', fmt(r.subscribers_count ?? 0))}
+                    </div>
+                    <dl class='mt-4 text-sm grid sm:grid-cols-2 gap-x-6 gap-y-1.5'>
+                        <div class='flex justify-between border-b border-stone-100 dark:border-stone-800 py-1'><dt class='text-stone-500 dark:text-stone-400'>License</dt><dd class='font-medium'>${esc(r.license?.spdx_id || 'None')}</dd></div>
+                        <div class='flex justify-between border-b border-stone-100 dark:border-stone-800 py-1'><dt class='text-stone-500 dark:text-stone-400'>Language</dt><dd class='font-medium'>${esc(r.language || '—')}</dd></div>
+                        <div class='flex justify-between border-b border-stone-100 dark:border-stone-800 py-1'><dt class='text-stone-500 dark:text-stone-400'>Created</dt><dd class='font-medium'>${day(r.created_at)}</dd></div>
+                        <div class='flex justify-between border-b border-stone-100 dark:border-stone-800 py-1'><dt class='text-stone-500 dark:text-stone-400'>Last push</dt><dd class='font-medium'>${day(r.pushed_at)}</dd></div>
+                        <div class='flex justify-between border-b border-stone-100 dark:border-stone-800 py-1'><dt class='text-stone-500 dark:text-stone-400'>Size</dt><dd class='font-medium'>${mb(r.size || 0)}</dd></div>
+                        <div class='flex justify-between border-b border-stone-100 dark:border-stone-800 py-1'><dt class='text-stone-500 dark:text-stone-400'>Homepage</dt><dd class='font-medium truncate max-w-[12rem]'>${r.homepage ? `<a href='${esc(r.homepage)}' target='_blank' rel='noopener noreferrer' class='hover:underline'>${esc(r.homepage.replace(/^https?:\/\//, ''))}</a>` : '—'}</dd></div>
+                    </dl>
+                    ${relBox}
+                    ${notes.length ? `<div class='mt-4 space-y-2'>${notes.map(note).join('')}</div>` : ''}
+                </div>`
+            statusEl.textContent = ''
+        } catch (e) {
+            statusEl.textContent = (e as Error).message
+        }
+    }
+
+    goEl.addEventListener('click', run)
+    repoEl.addEventListener('keydown', (ev) => {
+        if ((ev as KeyboardEvent).key === 'Enter') run()
+    })
+    document.querySelectorAll('button.ex').forEach((btn) =>
+        btn.addEventListener('click', () => {
+            repoEl.value = (btn as HTMLElement).dataset.r || ''
+            run()
+        })
+    )
+</script>
