@@ -57,6 +57,42 @@ import BaseLayout from '@/layouts/BaseLayout'
     <p class='text-center text-sm text-stone-500 dark:text-stone-400 mt-10'>
         Results are cached on your device for 30 minutes. Nothing is stored on our side.
     </p>
+
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-10'>
+        <h2>What does “trending” mean here?</h2>
+        <p>
+            GitHub's own trending page is curated and changes without explanation. This list is
+            different: it is computed live in your browser from the public GitHub Search API, using
+            rules you can verify. <strong>This week</strong> ranks repositories created in the last
+            7 days by the stars they collected (at least 30). <strong>This month</strong> does the
+            same for the last 30 days (at least 100 stars). <strong>All time</strong> ranks every
+            repository above 50,000 stars — the all-time greats.
+        </p>
+
+        <h2>Why only certain licenses?</h2>
+        <p>
+            Every repository shown carries a recognized open-source license: MIT, Apache-2.0, the
+            GPL family, BSD, MPL, ISC and a few others. Repositories with no license or with a
+            proprietary one are filtered out, so everything on this list is genuinely free software
+            you can legally use, study, modify and share.
+        </p>
+
+        <h2>How to read each card</h2>
+        <ul>
+            <li>The number is its position in the list; the avatar shows the developer or organisation behind it.</li>
+            <li><strong>★ n</strong> is the star count — how many people bookmarked the project.</li>
+            <li>The colored dot is the main programming language; the badge is the license.</li>
+            <li><strong>Updated</strong> is the date of the last push: recent pushes mean active maintenance.</li>
+        </ul>
+
+        <h2>Tips</h2>
+        <p>
+            The list is fresh on every visit and cached on your device for 30 minutes. Filtering by
+            a language is the fastest way to discover new libraries for your stack. If GitHub's
+            rate limit (60 requests per hour per IP) is reached, the page will tell you — wait a
+            few minutes and reload.
+        </p>
+    </article>
 </BaseLayout>
 
 <script>
