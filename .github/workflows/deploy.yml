@@ -31,6 +31,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build TinaCMS admin
+        run: pnpm exec tinacms build
+        env:
+          TINA_PUBLIC_CLIENT_ID: ${{ secrets.TINA_PUBLIC_CLIENT_ID }}
+          TINA_TOKEN: ${{ secrets.TINA_TOKEN }}
+
       - name: Build site
         run: pnpm run build
 
