@@ -64,9 +64,12 @@
 		"tinacms": "^1.5.21",
 		"typescript": "^5.2.2"
 	},
-	"lint-staged": {
-		"*.{astro,js,jsx,ts,tsx,md,mdx,json}": [
-			"prettier --write --plugin-search-dir=."
-		]
-	}
+    "lint-staged": {
+        "*.{astro,js,jsx,ts,tsx,md,mdx,json}": [
+            "prettier --write --plugin-search-dir=."
+        ]
+    },
+    "pnpm": {
+        "neverBuiltDependencies": ["better-sqlite3"]
+    }
 }
