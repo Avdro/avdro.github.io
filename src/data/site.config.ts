@@ -13,7 +13,7 @@ export const siteConfig: SiteConfig = {
     site: 'https://www.getfoss.org/',
     author: 'Avdro',
     title: 'GetFOSS',
-    description: 'GetFOSS is a curated guide to the best free and open-source software. Quality FOSS apps for every platform — private, secure, and community-driven.',
+    description: 'Free and open-source software, done right. GetFOSS picks the best FOSS apps — private, secure, and community-driven — for every platform.',
     lang: 'en',
     ogLocale: 'en_US',
     shareMessage: 'Share this post',
