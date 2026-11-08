@@ -3,6 +3,9 @@ lockfileVersion: '6.0'
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
+  
+  neverBuiltDependencies:
+  - better-sqlite3
 
 dependencies:
   '@astrojs/rss':
