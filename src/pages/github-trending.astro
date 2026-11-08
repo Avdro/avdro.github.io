@@ -154,7 +154,7 @@ import BaseLayout from '@/layouts/BaseLayout'
             const data = await res.json()
             const items: Repo[] = (data.items || [])
                 .filter((r: any) => r.license && r.license.spdx_id && OSI.has(r.license.spdx_id))
-                .slice(0, 25)
+                .slice(0, 30)
                 .map((r: any) => ({
                     name: r.full_name,
                     url: r.html_url,
