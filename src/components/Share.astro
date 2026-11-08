@@ -2,6 +2,7 @@
 import TwitterColorIcon from './icons/TwitterColorIcon.astro'
 import LinkedinColorIcon from './icons/LinkedinColorIcon.astro'
 import FacebookColorIcon from './icons/FacebookColorIcon.astro'
+import MailColorIcon from './icons/MailColorIcon.astro'
 
 interface Props {
     title?: string
@@ -28,10 +29,16 @@ const URL = Astro.url.href
         </li>
         <li>
             <a
-                href={`https://www.linkedin.com/shareArticle?mini=true&url=${URL}`}
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${URL}`}
                 aria-label='Share on LinkedIn'
             >
                 <LinkedinColorIcon /></a
+            >
+        </li>
+        <li>
+            <a
+                href={`mailto:?subject=${encodeURIComponent(title ?? '')}&body=${encodeURIComponent(URL)}`}
+                aria-label='Share by Email'><MailColorIcon /></a
             >
         </li>
     </ul>
