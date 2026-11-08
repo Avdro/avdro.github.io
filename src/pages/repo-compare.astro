@@ -1,0 +1,208 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+---
+
+<BaseLayout
+    title='GitHub Repo Compare'
+    description='Compare two GitHub repositories side by side — stars, forks, issues, license, language and activity. Runs in your browser via the public GitHub API.'
+>
+    <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
+        Repo Compare
+    </h1>
+
+    <p class='text-center text-stone-600 dark:text-stone-300 max-w-3xl mx-auto -mt-2 mb-8'>
+        Torn between two open-source tools? Put them side by side — community size, license,
+        activity — and let the numbers help you decide.
+    </p>
+
+    <div class='not-prose max-w-4xl mx-auto px-4'>
+        <div class='flex flex-wrap items-center justify-center gap-3'>
+            <input id='f-a' type='text' placeholder='owner/repo — left'
+                class='rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-3 py-2 w-56' />
+            <button id='f-swap' title='Swap'
+                class='rounded-lg border border-stone-300 dark:border-stone-700 px-3 py-2 text-sm hover:border-stone-500 transition-colors'>⇄</button>
+            <input id='f-b' type='text' placeholder='owner/repo — right'
+                class='rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-3 py-2 w-56' />
+            <button id='f-go'
+                class='rounded-lg bg-stone-900 text-white dark:bg-white dark:text-stone-900 px-5 py-2 text-sm font-semibold hover:opacity-80 transition-opacity'>Compare</button>
+        </div>
+
+        <div class='flex flex-wrap justify-center items-center gap-2 mt-4'>
+            <span class='text-sm text-stone-500 dark:text-stone-400'>Try:</span>
+            <button data-a='gnome/gimp' data-b='KDE/krita' class='ex rounded-full border border-stone-300 dark:border-stone-700 px-3 py-1 text-sm hover:border-stone-500 transition-colors'>GIMP vs Krita</button>
+            <button data-a='videolan/vlc' data-b='mpv-player/mpv' class='ex rounded-full border border-stone-300 dark:border-stone-700 px-3 py-1 text-sm hover:border-stone-500 transition-colors'>VLC vs mpv</button>
+            <button data-a='darktable-org/darktable' data-b='RawTherapee/RawTherapee' class='ex rounded-full border border-stone-300 dark:border-stone-700 px-3 py-1 text-sm hover:border-stone-500 transition-colors'>darktable vs RawTherapee</button>
+        </div>
+
+        <p id='cmp-status' class='text-center text-sm text-stone-500 dark:text-stone-400 my-6'></p>
+        <div id='cmp-result' class='mt-2'></div>
+    </div>
+
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-10'>
+        <h2>What is Repo Compare?</h2>
+        <p>
+            This tool takes any two GitHub repositories and shows their key numbers side by side:
+            stars, forks, open issues, watchers, license, main language, when each project was
+            created, when it was last pushed, and its size. It is the quickest way to answer the
+            question every Linux user, developer and privacy-conscious person eventually asks:
+            <em>“Which of these two projects should I commit to?”</em>
+        </p>
+
+        <h2>How to use it</h2>
+        <ol>
+            <li>Type a repository in the form <code>owner/name</code> — for example <code>gnome/gimp</code> — in each of the two fields. The owner is the user or organisation name in the GitHub URL.</li>
+            <li>Press <strong>Compare</strong>, or click one of the ready examples below the fields.</li>
+            <li>Read the two columns. The green bars show how the numbers relate to each other.</li>
+        </ol>
+
+        <h2>What the numbers actually mean</h2>
+        <ul>
+            <li><strong>Stars</strong> — popularity. A useful proxy for community size, but not quality on its own.</li>
+            <li><strong>Forks</strong> — how many people cloned the project to build on it. High forks with low stars can mean a developer tool with few end users.</li>
+            <li><strong>Open issues</strong> — engagement. A big number is not bad by itself: it means people actually use the project and report problems.</li>
+            <li><strong>Last push</strong> — the single most important health signal. If a project has not been pushed to in over a year, think twice before adopting it.</li>
+            <li><strong>License</strong> — your rights. Look for MIT, Apache-2.0, GPL, MPL or BSD; all of them are genuine open-source licenses.</li>
+        </ul>
+
+        <h2>Privacy and limits</h2>
+        <p>
+            Both lookups happen in your browser against the public GitHub API — nothing is stored on
+            our side. GitHub allows 60 unauthenticated requests per hour per IP address, and each
+            comparison uses exactly two, so you can compare all evening. If you hit the limit, wait
+            a few minutes and try again.
+        </p>
+    </article>
+</BaseLayout>
+
+<script>
+    const aEl = document.getElementById('f-a') as HTMLInputElement
+    const bEl = document.getElementById('f-b') as HTMLInputElement
+    const goEl = document.getElementById('f-go') as HTMLButtonElement
+    const swapEl = document.getElementById('f-swap') as HTMLButtonElement
+    const statusEl = document.getElementById('cmp-status') as HTMLElement
+    const resultEl = document.getElementById('cmp-result') as HTMLElement
+
+    const esc = (s: string) =>
+        s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+
+    const fmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n))
+    const day = (iso: string) => (iso || '').slice(0, 10)
+    const mb = (kb: number) => (kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB')
+
+    interface RepoInfo {
+        full: string; url: string; desc: string; stars: number; forks: number
+        issues: number; watchers: number; lic: string; lang: string
+        created: string; pushed: string; size: number; avatar: string
+    }
+
+    const parse = (s: string) => {
+        const m = s.trim().match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/)
+        return m ? m[1] + '/' + m[2] : ''
+    }
+
+    const loadRepo = async (slug: string): Promise<RepoInfo> => {
+        const res = await fetch(`https://api.github.com/repos/${slug}`, {
+            headers: { Accept: 'application/vnd.github+json' }
+        })
+        if (res.status === 404) throw new Error(`Repository “${slug}” not found — check the owner/name spelling.`)
+        if (res.status === 403) throw new Error('GitHub API rate limit reached on your network. Please wait a few minutes.')
+        if (!res.ok) throw new Error('GitHub API error ' + res.status)
+        const r = await res.json()
+        return {
+            full: r.full_name, url: r.html_url, desc: r.description || '',
+            stars: r.stargazers_count, forks: r.forks_count, issues: r.open_issues_count,
+            watchers: r.subscribers_count ?? 0, lic: r.license?.spdx_id || 'None',
+            lang: r.language || '—', created: day(r.created_at), pushed: day(r.pushed_at),
+            size: r.size || 0, avatar: r.owner?.avatar_url || ''
+        }
+    }
+
+    const metricRow = (label: string, left: string, right: string, lp?: number, rp?: number) => `
+        <div class='py-2 border-b border-stone-100 dark:border-stone-800 last:border-0'>
+            <div class='flex justify-between text-sm'>
+                <span class='font-medium'>${left}</span>
+                <span class='text-stone-400 dark:text-stone-500 text-xs uppercase tracking-wide self-center'>${label}</span>
+                <span class='font-medium text-right'>${right}</span>
+            </div>
+            ${lp !== undefined && rp !== undefined ? `
+            <div class='grid grid-cols-2 gap-2 mt-1'>
+                <div class='h-1.5 rounded bg-stone-200 dark:bg-stone-800 overflow-hidden'><div class='h-1.5 rounded bg-emerald-500' style='width:${lp}%'></div></div>
+                <div class='h-1.5 rounded bg-stone-200 dark:bg-stone-800 overflow-hidden'><div class='h-1.5 rounded bg-sky-500' style='width:${rp}%'></div></div>
+            </div>` : ''}
+        </div>`
+
+    const render = (a: RepoInfo, b: RepoInfo) => {
+        const maxStars = Math.max(a.stars, b.stars, 1)
+        const maxForks = Math.max(a.forks, b.forks, 1)
+        const header = (r: RepoInfo) => `
+            <div class='flex items-center gap-3'>
+                <img src='${esc(r.avatar)}' alt='' class='rounded-full w-10 h-10' />
+                <div class='min-w-0'>
+                    <a href='${esc(r.url)}' target='_blank' rel='noopener noreferrer'
+                        class='font-semibold break-words hover:underline'>${esc(r.full)}</a>
+                    <p class='text-sm text-stone-600 dark:text-stone-300 mt-0.5'>${esc(r.desc)}</p>
+                </div>
+            </div>`
+        resultEl.innerHTML = `
+            <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-5'>
+                <div class='grid md:grid-cols-2 gap-4'>
+                    <div>${header(a)}</div>
+                    <div>${header(b)}</div>
+                </div>
+                <div class='mt-4'>
+                    ${metricRow('Stars', fmt(a.stars), fmt(b.stars), (a.stars / maxStars) * 100, (b.stars / maxStars) * 100)}
+                    ${metricRow('Forks', fmt(a.forks), fmt(b.forks), (a.forks / maxForks) * 100, (b.forks / maxForks) * 100)}
+                    ${metricRow('Open issues', fmt(a.issues), fmt(b.issues))}
+                    ${metricRow('Watchers', fmt(a.watchers), fmt(b.watchers))}
+                    ${metricRow('License', esc(a.lic), esc(b.lic))}
+                    ${metricRow('Language', esc(a.lang), esc(b.lang))}
+                    ${metricRow('Created', a.created, b.created)}
+                    ${metricRow('Last push', a.pushed, b.pushed)}
+                    ${metricRow('Size', mb(a.size), mb(b.size))}
+                </div>
+                <p class='mt-4 text-center text-sm font-medium'>
+                    ${a.stars === b.stars
+                        ? 'Dead heat — both have the same number of stars.'
+                        : `${a.stars > b.stars ? esc(a.full) : esc(b.full)} leads on stars: ${fmt(Math.max(a.stars, b.stars))} vs ${fmt(Math.min(a.stars, b.stars))}.`}
+                </p>
+            </div>`
+    }
+
+    const run = async () => {
+        const sa = parse(aEl.value)
+        const sb = parse(bEl.value)
+        if (!sa || !sb) {
+            statusEl.textContent = 'Enter both repositories in the owner/name form, e.g. gnome/gimp.'
+            return
+        }
+        statusEl.textContent = 'Loading repositories…'
+        resultEl.innerHTML = ''
+        try {
+            const [ra, rb] = await Promise.all([loadRepo(sa), loadRepo(sb)])
+            statusEl.textContent = ''
+            render(ra, rb)
+        } catch (e) {
+            statusEl.textContent = (e as Error).message
+        }
+    }
+
+    goEl.addEventListener('click', run)
+    swapEl.addEventListener('click', () => {
+        const t = aEl.value
+        aEl.value = bEl.value
+        bEl.value = t
+    })
+    ;[aEl, bEl].forEach((el) =>
+        el.addEventListener('keydown', (ev) => {
+            if ((ev as KeyboardEvent).key === 'Enter') run()
+        })
+    )
+    document.querySelectorAll('button.ex').forEach((btn) =>
+        btn.addEventListener('click', () => {
+            const b = btn as HTMLElement
+            aEl.value = b.dataset.a || ''
+            bEl.value = b.dataset.b || ''
+            run()
+        })
+    )
+</script>
