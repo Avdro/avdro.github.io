@@ -4,16 +4,27 @@ import BaseLayout from '@/layouts/BaseLayout'
 
 <BaseLayout
     title='Release Radar'
-    description='The latest stable releases from 22 popular open-source projects — OBS, Godot, Bitwarden, Nextcloud, Jellyfin and more, updated live from the GitHub API.'
+    description='The latest stable releases from 65 popular open-source projects — OBS, Godot, Bitwarden, Nextcloud, Jellyfin and more — refreshed automatically every day.'
 >
     <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
         Release Radar
     </h1>
 
     <p class='text-center text-stone-600 dark:text-stone-300 max-w-3xl mx-auto -mt-2 mb-8'>
-        The newest stable versions of the open-source software you rely on — fetched live from the
-        GitHub API in your browser, newest first.
+        The newest stable versions of the open-source software you rely on — 65 projects across
+        eight categories, refreshed automatically every day.
     </p>
+
+    <div class='not-prose max-w-5xl mx-auto px-4'>
+        <input
+            id='f-search'
+            type='search'
+            placeholder='Search projects, e.g. "nextcloud"…'
+            class='w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-4 py-2.5'
+        />
+        <div class='flex flex-wrap justify-center items-center gap-2 my-4' id='f-cats'></div>
+        <p id='radar-count' class='text-center text-sm text-stone-500 dark:text-stone-400 mb-4'></p>
+    </div>
 
     <div id='radar-list' class='grid gap-4 md:grid-cols-2 not-prose'></div>
     <p id='radar-status' class='text-center text-sm text-stone-500 dark:text-stone-400 my-6'></p>
@@ -22,82 +33,57 @@ import BaseLayout from '@/layouts/BaseLayout'
         <h2>What is the Release Radar?</h2>
         <p>
             Most open-source apps update quietly: a new version appears on GitHub, and unless you
-            follow the project you only find out months later. This page fixes that. We track 22
-            well-known free and open-source projects — media tools, password managers, servers,
-            game engines — and show their latest stable release at a glance, newest first.
+            follow the project you only find out months later. This page fixes that. We track
+            <strong>65 well-known free and open-source projects</strong> — media tools, graphics
+            suites, note apps, password managers, self-hosted servers and developer tools — and
+            show their latest stable release at a glance, newest first.
+        </p>
+
+        <h2>How fresh is this data?</h2>
+        <p>
+            The list is collected automatically every morning (around 08:00 in Central European
+            time) when the site rebuilds, and again after every content update. Unlike our other
+            GitHub-powered pages, the data here comes as a small ready-made file from our own
+            server — so it loads instantly and is never blocked by GitHub's rate limits. Only
+            stable releases are shown; betas and release candidates are skipped automatically.
         </p>
 
         <h2>Why follow releases?</h2>
         <p>
             Three reasons. <strong>Security</strong>: many releases patch vulnerabilities, so an
-            outdated app is often an unsafe app. <strong>Features</strong>: open-source projects move
-            fast, and big improvements land every few weeks. <strong>Planning</strong>: if you host
-            software yourself — Nextcloud, Jellyfin, Immich — you want to know what changed before
-            you update your server.
-        </p>
-
-        <h2>How it works</h2>
-        <p>
-            When you open this page, your browser asks the public GitHub API for the latest release
-            of each tracked project and sorts the results by date. Nothing is stored on our side,
-            and no account or key is involved. Results are cached on your device for one hour so a
-            single visit uses your request budget sparingly — GitHub allows unauthenticated visitors
-            60 requests per hour per IP address.
-        </p>
-
-        <h2>Which projects are tracked?</h2>
-        <p>
-            OBS Studio, Audacity, Shotcut, mpv, Godot Engine, Bitwarden, KeePassXC, Joplin,
-            Nextcloud, Syncthing, Jellyfin, Element, Signal Desktop, PowerToys, yt-dlp, Immich,
-            Mastodon, LocalSend, Ente, AppFlowy, darktable and HandBrake. Only stable releases are
-            shown — betas and release candidates are skipped automatically.
+            outdated app is often an unsafe app. <strong>Features</strong>: open-source projects
+            move fast, and big improvements land every few weeks. <strong>Planning</strong>: if you
+            host software yourself — Nextcloud, Immich, Home Assistant — you want to know what
+            changed before you update your server.
         </p>
 
         <h2>Reading each card</h2>
         <p>
-            The bold name links to the release page on GitHub, where you will find the changelog and
-            download files. The tag (for example <code>v4.2.1</code>) is the version identifier, and
-            the date tells you how fresh the release is. Click through before updating a
-            self-hosted service: the changelog warns you about breaking changes and migration steps.
+            The bold name links to the release page on GitHub, where you will find the changelog
+            and download files. The tag (for example <code>v4.2.1</code>) is the version
+            identifier, and the date tells you how fresh the release is. Click through before
+            updating a self-hosted service: the changelog warns you about breaking changes and
+            migration steps. Use the category chips to narrow the list — for example, only
+            self-hosted servers or only developer tools.
         </p>
     </article>
 </BaseLayout>
 
 <script>
-    interface Project { repo: string; name: string }
-
-    const PROJECTS: Project[] = [
-        { repo: 'obsproject/obs-studio', name: 'OBS Studio' },
-        { repo: 'audacity/audacity', name: 'Audacity' },
-        { repo: 'mltframework/shotcut', name: 'Shotcut' },
-        { repo: 'mpv-player/mpv', name: 'mpv' },
-        { repo: 'godotengine/godot', name: 'Godot Engine' },
-        { repo: 'bitwarden/clients', name: 'Bitwarden' },
-        { repo: 'keepassxreboot/keepassxc', name: 'KeePassXC' },
-        { repo: 'laurent22/joplin', name: 'Joplin' },
-        { repo: 'nextcloud/server', name: 'Nextcloud' },
-        { repo: 'syncthing/syncthing', name: 'Syncthing' },
-        { repo: 'jellyfin/jellyfin', name: 'Jellyfin' },
-        { repo: 'element-hq/element-web', name: 'Element' },
-        { repo: 'signalapp/Signal-Desktop', name: 'Signal Desktop' },
-        { repo: 'microsoft/PowerToys', name: 'PowerToys' },
-        { repo: 'yt-dlp/yt-dlp', name: 'yt-dlp' },
-        { repo: 'immich-app/immich', name: 'Immich' },
-        { repo: 'mastodon/mastodon', name: 'Mastodon' },
-        { repo: 'localsend/localsend', name: 'LocalSend' },
-        { repo: 'ente-io/ente', name: 'Ente Photos' },
-        { repo: 'appflowy-io/appflowy', name: 'AppFlowy' },
-        { repo: 'darktable-org/darktable', name: 'darktable' },
-        { repo: 'HandBrake/HandBrake', name: 'HandBrake' }
-    ]
-
-    interface Release {
-        repo: string; name: string; tag: string; title: string
-        date: string; url: string; avatar: string
+    interface Rel {
+        repo: string; name: string; cat: string
+        tag: string; title: string; date: string; url: string
     }
+
+    let ALL: Rel[] = []
+    let cat = 'All'
+    let q = ''
 
     const listEl = document.getElementById('radar-list') as HTMLElement
     const statusEl = document.getElementById('radar-status') as HTMLElement
+    const countEl = document.getElementById('radar-count') as HTMLElement
+    const catsEl = document.getElementById('f-cats') as HTMLElement
+    const searchEl = document.getElementById('f-search') as HTMLInputElement
 
     const esc = (s: string) =>
         s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
@@ -113,21 +99,56 @@ import BaseLayout from '@/layouts/BaseLayout'
         return years === 1 ? '1 year ago' : years + ' years ago'
     }
 
-    const render = (items: Release[]) => {
+    const filtered = () =>
+        ALL.filter(
+            (r) =>
+                (cat === 'All' || r.cat === cat) &&
+                (q === '' || (r.name + ' ' + r.repo + ' ' + r.tag + ' ' + r.title).toLowerCase().includes(q))
+        )
+
+    const renderChips = () => {
+        const names = ['All', ...new Set(ALL.map((r) => r.cat))]
+        catsEl.innerHTML = names
+            .map((c) => {
+                const active = c === cat
+                const cls = active
+                    ? 'rounded-full px-3 py-1 text-sm bg-stone-900 text-white dark:bg-white dark:text-stone-900'
+                    : 'rounded-full px-3 py-1 text-sm border border-stone-300 dark:border-stone-700 hover:border-stone-500 transition-colors'
+                return `<button data-cat='${esc(c)}' class='${cls}'>${esc(c)}</button>`
+            })
+            .join('')
+        catsEl.querySelectorAll('button').forEach((b) =>
+            b.addEventListener('click', () => {
+                cat = (b as HTMLElement).dataset.cat || 'All'
+                renderChips()
+                render()
+            })
+        )
+    }
+
+    const render = () => {
+        const items = filtered()
+        countEl.textContent = `Showing ${items.length} of ${ALL.length} tracked projects`
+        if (!items.length) {
+            listEl.innerHTML = ''
+            countEl.textContent = 'No matches — try a shorter search term.'
+            return
+        }
         listEl.innerHTML = items
             .map((r) => {
+                const avatar = `https://github.com/${r.repo.split('/')[0]}.png?size=80`
                 const sub = r.title && r.title !== r.tag ? r.title : ''
                 return `
                 <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-5'>
                     <div class='flex items-start gap-3'>
-                        <img src='${esc(r.avatar)}' alt='' loading='lazy' class='rounded-full w-10 h-10 shrink-0' />
+                        <img src='${esc(avatar)}' alt='' loading='lazy' class='rounded-full w-10 h-10 shrink-0' />
                         <div class='min-w-0'>
                             <a href='${esc(r.url)}' target='_blank' rel='noopener noreferrer'
                                 class='font-semibold break-words hover:underline'>${esc(r.name)}</a>
                             <span class='ml-2 rounded border border-stone-300 dark:border-stone-700 px-1.5 py-0.5 text-xs'>${esc(r.tag)}</span>
                             ${sub ? `<p class='text-sm text-stone-600 dark:text-stone-300 mt-1'>${esc(sub)}</p>` : ''}
                             <p class='text-xs text-stone-500 dark:text-stone-400 mt-1.5'>
-                                Published ${esc(rel(r.date))} · ${esc(r.repo)}
+                                Published ${esc(rel(r.date))} · ${esc(r.cat)}
                             </p>
                         </div>
                     </div>
@@ -136,66 +157,28 @@ import BaseLayout from '@/layouts/BaseLayout'
             .join('')
     }
 
-    const loadOne = async (p: Project): Promise<Release | null> => {
-        try {
-            const res = await fetch(`https://api.github.com/repos/${p.repo}/releases/latest`, {
-                headers: { Accept: 'application/vnd.github+json' }
-            })
-            if (!res.ok) return null
-            const r = await res.json()
-            if (!r || !r.tag_name) return null
-            return {
-                repo: p.repo,
-                name: p.name,
-                tag: r.tag_name,
-                title: r.name || '',
-                date: r.published_at || '',
-                url: r.html_url,
-                avatar: `https://github.com/${p.repo.split('/')[0]}.png?size=80`
-            }
-        } catch {
-            return null
-        }
-    }
-
     const load = async () => {
-        const cacheKey = 'getfoss:releases'
-        const cached = localStorage.getItem(cacheKey)
-        if (cached) {
-            try {
-                const c = JSON.parse(cached)
-                if (Date.now() - c.t < 60 * 60 * 1000 && Array.isArray(c.items) && c.items.length) {
-                    render(c.items)
-                    statusEl.textContent = ''
-                    return
-                }
-            } catch {
-                /* ignore bad cache */
-            }
-        }
-        statusEl.textContent = 'Loading the latest releases…'
-        const results = await Promise.allSettled(PROJECTS.map(loadOne))
-        const items = results
-            .filter((r): r is PromiseFulfilledResult<Release | null> => r.status === 'fulfilled' && r.value !== null)
-            .map((r) => r.value as Release)
-            .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-        const failed = PROJECTS.length - items.length
-        if (!items.length) {
-            statusEl.textContent =
-                'Could not load data from GitHub (rate limit or network issue). Please try again in a few minutes.'
-            return
-        }
-        render(items)
-        statusEl.textContent =
-            failed > 0
-                ? `Showing ${items.length} of ${PROJECTS.length} tracked projects — a few requests were rate-limited, refresh in a minute for the rest.`
-                : `Showing all ${items.length} tracked projects`
+        statusEl.textContent = 'Loading release data…'
         try {
-            localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), items }))
+            const res = await fetch(`/data/releases.json?d=${new Date().toISOString().slice(0, 10)}`)
+            if (!res.ok) throw new Error('HTTP ' + res.status)
+            const data = await res.json()
+            ALL = (data.items || []) as Rel[]
+            if (!ALL.length) {
+                statusEl.textContent = 'No release data available yet — the list is refreshed automatically every day.'
+                return
+            }
+            renderChips()
+            render()
+            statusEl.textContent = ''
         } catch {
-            /* storage unavailable */
+            statusEl.textContent = 'Could not load release data. Please refresh the page in a minute.'
         }
     }
 
+    searchEl.addEventListener('input', () => {
+        q = searchEl.value.trim().toLowerCase()
+        render()
+    })
     load()
 </script>
