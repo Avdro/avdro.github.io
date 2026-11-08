@@ -1,0 +1,54 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+import { getCollection } from 'astro:content'
+import { CATEGORIES } from '@/data/categories'
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+)
+
+const categoryHref = (category: string) => `/category/${category.toLowerCase().replace(/\s+/g, '-')}/1`
+
+const pages = [
+    { href: '/about/', label: 'About' },
+    { href: '/contact-us/', label: 'Contact Us' },
+    { href: '/what-is-my-ip/', label: 'What Is My IP Address?' },
+    { href: '/rss-feed/', label: 'RSS Feed' },
+    { href: '/privacy-policy/', label: 'Privacy Policy' },
+    { href: '/terms-and-conditions/', label: 'Terms and Conditions' },
+    { href: '/disclaimer/', label: 'Disclaimer' }
+]
+---
+
+<BaseLayout
+    title='Sitemap'
+    description='All pages, categories, and articles on GetFOSS in one place.'
+>
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-4'>
+        <h1>Sitemap</h1>
+
+        <h2>Pages</h2>
+        <ul>
+            {pages.map((page) => <li><a href={page.href}>{page.label}</a></li>)}
+        </ul>
+
+        <h2>Categories</h2>
+        <ul>
+            {CATEGORIES.map((category) => <li><a href={categoryHref(category)}>{category}</a></li>)}
+        </ul>
+
+        <h2>Articles</h2>
+        <ul>
+            {posts.map((post) => (
+                <li>
+                    <a href={`/post/${post.slug}/`}>{post.data.title}</a>{' '}
+                    <em>— {post.data.pubDate.toISOString().slice(0, 10)}</em>
+                </li>
+            ))}
+        </ul>
+
+        <p class='text-sm'>
+            For search engines: <a href='/sitemap-index.xml'>sitemap-index.xml</a>
+        </p>
+    </article>
+</BaseLayout>
