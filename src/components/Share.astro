@@ -1,10 +1,13 @@
 ---
-import { siteConfig } from '@/data/site.config'
 import TwitterColorIcon from './icons/TwitterColorIcon.astro'
 import LinkedinColorIcon from './icons/LinkedinColorIcon.astro'
 import FacebookColorIcon from './icons/FacebookColorIcon.astro'
-const message = siteConfig.shareMessage
 
+interface Props {
+    title?: string
+}
+
+const { title } = Astro.props
 const URL = Astro.url.href
 ---
 
@@ -13,7 +16,7 @@ const URL = Astro.url.href
     <ul class='flex gap-3 text-black dark:text-white'>
         <li>
             <a
-                href={`https://twitter.com/intent/tweet?text=${message + ' ' + URL}`}
+                href={`https://twitter.com/intent/tweet?text=${(title ? title + ' ' : '') + URL}`}
                 aria-label='Share on Twitter'><TwitterColorIcon /></a
             >
         </li>
