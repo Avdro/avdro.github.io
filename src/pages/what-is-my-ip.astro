@@ -1,0 +1,167 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+---
+
+<BaseLayout
+    title='What Is My IP Address?'
+    description='Instantly see your public IP address (IPv4 and IPv6), learn how IP addresses work, why they change, and how to keep yours private.'
+>
+    <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
+        What Is My IP Address?
+    </h1>
+
+    <div class='grid grid-cols-1 md:grid-cols-2 gap-6 my-10'>
+        <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-8 text-center'>
+            <p class='text-sm uppercase tracking-wide text-stone-500 dark:text-stone-400'>
+                IPv4 Address
+            </p>
+            <p
+                id='ipv4-value'
+                class='animate-pulse mt-3 text-3xl md:text-4xl font-semibold font-mono break-all'
+            >
+                Detecting…
+            </p>
+            <button
+                type='button'
+                data-copy='ipv4-value'
+                class='mt-4 text-sm underline opacity-60 hover:opacity-100 transition-opacity'
+            >
+                Copy
+            </button>
+        </div>
+        <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-8 text-center'>
+            <p class='text-sm uppercase tracking-wide text-stone-500 dark:text-stone-400'>
+                IPv6 Address
+            </p>
+            <p
+                id='ipv6-value'
+                class='animate-pulse mt-3 text-3xl md:text-4xl font-semibold font-mono break-all'
+            >
+                Detecting…
+            </p>
+            <button
+                type='button'
+                data-copy='ipv6-value'
+                class='mt-4 text-sm underline opacity-60 hover:opacity-100 transition-opacity'
+            >
+                Copy
+            </button>
+        </div>
+    </div>
+
+    <p class='text-center text-sm text-stone-500 dark:text-stone-400 -mt-4 mb-10'>
+        Detected in your browser via the free ipify.org API. Your IP address is not stored by this site.
+    </p>
+
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-4'>
+        <h2>What is a public IP address?</h2>
+        <p>
+            Every device that talks to the internet needs an address. Your public IP address is the unique
+            identifier your Internet Service Provider (ISP) assigns to your connection — it is what
+            websites, apps, and online services see when you visit them. Think of it as a return address:
+            when you request a page, the server knows where to send the data back.
+        </p>
+        <p>
+            Do not confuse it with the private IP addresses (usually 192.168.x.x or 10.x.x.x) that your
+            router hands out to devices inside your home or office network. Private addresses work only
+            within the local network. Your public IP is the one visible to the entire internet.
+        </p>
+
+        <h2>IPv4 vs IPv6</h2>
+        <p>
+            <strong>IPv4</strong> is the format most of the internet still uses: four groups of numbers, for
+            example 203.0.113.42. It allows about 4.3 billion unique addresses — a pool that has run dry as
+            the number of connected devices keeps growing.
+        </p>
+        <p>
+            <strong>IPv6</strong> is its successor: much longer alphanumeric addresses, for example
+            2001:db8::1. With 128 bits, it provides a virtually unlimited number of addresses and was
+            created specifically to solve the shortage. Many connections today use both, which is why this
+            page shows two results — if IPv6 says "Not detected", your network is IPv4-only.
+        </p>
+
+        <h2>Is this address permanent?</h2>
+        <p>
+            Almost all home users have a dynamic IP address: the ISP can change it periodically, for example
+            when your router restarts or when the lease time expires. Businesses and servers, on the other
+            hand, often pay for a static IP that never changes — useful for hosting a website, running
+            remote access to an office network, or keeping services reachable at the same address.
+        </p>
+
+        <h2>Keep it private</h2>
+        <p>
+            Your IP address does not reveal your home address, but it does expose your approximate location
+            (usually city level) and your ISP. Sharing it publicly can invite unwanted attention, from
+            port scanning to denial-of-service attacks. A practical way to hide it is a VPN — and the best
+            part is that the technology behind most trustworthy VPNs, such as WireGuard or OpenVPN, is
+            open source. Share your IP only where it is really needed.
+        </p>
+
+        <h2>Why check your public IP?</h2>
+        <ul>
+            <li>
+                <strong>Troubleshooting:</strong> confirm whether your ISP has assigned you a new address or
+                your connection behaves as expected.
+            </li>
+            <li>
+                <strong>Router and firewall setup:</strong> port forwarding, firewall rules, and parental
+                controls often require knowing your current public IP.
+            </li>
+            <li>
+                <strong>Remote access and VPNs:</strong> connect to your home network from anywhere, or open
+                this page while your VPN is on and off to verify it actually masks your address.
+            </li>
+            <li>
+                <strong>Security monitoring:</strong> track changes to a dynamic IP to spot unexpected
+                activity on your connection.
+            </li>
+        </ul>
+    </article>
+</BaseLayout>
+
+<script>
+    const fetchIp = async (url: string): Promise<string> => {
+        try {
+            const res = await fetch(url, { signal: AbortSignal.timeout(6000) })
+            if (!res.ok) return ''
+            const data = await res.json()
+            return data.ip || ''
+        } catch {
+            return ''
+        }
+    }
+
+    const setValue = (id: string, value: string) => {
+        const el = document.getElementById(id)
+        if (!el) return
+        el.classList.remove('animate-pulse')
+        el.textContent = value || 'Not detected'
+    }
+
+    const detect = async () => {
+        const [v4, v6] = await Promise.all([
+            fetchIp('https://api.ipify.org?format=json'),
+            fetchIp('https://api6.ipify.org?format=json')
+        ])
+        setValue('ipv4-value', v4)
+        setValue('ipv6-value', v6)
+    }
+
+    detect()
+
+    document.querySelectorAll('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const targetId = btn.getAttribute('data-copy')
+            const target = targetId ? document.getElementById(targetId) : null
+            const text = target?.textContent?.trim()
+            if (!text || text === 'Detecting…' || text === 'Not detected') return
+            try {
+                await navigator.clipboard.writeText(text)
+                btn.textContent = 'Copied!'
+                setTimeout(() => (btn.textContent = 'Copy'), 1500)
+            } catch {
+                /* clipboard unavailable */
+            }
+        })
+    })
+</script>
