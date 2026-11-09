@@ -11,105 +11,82 @@ tags:
 title: 'GhostBSD: A Beginner-Friendly Desktop Built on FreeBSD'
 ---
 
-Most people who want to leave Windows or macOS reach for Linux first. There is a second
-family of free desktop systems, though — the BSDs — and the easiest one to try is
-GhostBSD. It takes the FreeBSD base, adds a ready-made desktop and a set of simple
-graphical tools, and puts all of it in an installer you can run in one afternoon. This
-guide explains what GhostBSD is, what it ships with, and how to get it onto a spare
-computer.
+If you have only used Linux, GhostBSD will feel like a familiar stranger. You get a graphical desktop, a live USB session, a point-and-click installer and a graphical software manager - but underneath runs FreeBSD, an operating system from an entirely different family than Linux. The project describes itself as a simple, elegant desktop BSD operating system, and that is a fair summary. GhostBSD takes a system famous for powering servers and file storage and turns it into something you can install on a home laptop in fifteen minutes.
 
-## What is GhostBSD?
+## What Is GhostBSD?
 
-GhostBSD is a desktop-oriented operating system built on top of FreeBSD, the well-known
-server operating system that traces its roots back to the University of California,
-Berkeley. The project has been around since 2009 and is maintained by Eric Turgeon
-together with community contributors. Where plain FreeBSD expects you to assemble a
-desktop yourself, GhostBSD hands you a complete one: the MATE desktop comes configured
-out of the box, and the whole system boots as a live session before you install anything.
+GhostBSD began in 2010, when developer Eric Turgeon set out to give FreeBSD a proper desktop edition. The first release appeared in March 2010, and the project has been updated continuously ever since. The current release, 26.3, is built on FreeBSD 15.1 and comes as an image for 64-bit (amd64) machines.
 
-Since 2025 the project uses a year-month naming scheme, so releases look like
-25.02-R14.3p2 or 26.2-R15.1p6: the first number is the release date, the R-number is the
-FreeBSD RELEASE the build is based on. That matters, because it tells you exactly which
-kernel and base system you are getting. Each GhostBSD release tracks a matching FreeBSD
-RELEASE instead of a moving development branch, so the base of your system changes only
-when you deliberately upgrade to a new release.
+Two details set the tone of the project. First, the default desktop is MATE, a classic layout with a taskbar, a menu and a system tray, kept light on resources. A community edition with Xfce is also available. Second, the core of the system is distributed under the BSD 2-clause license, one of the most permissive licenses in the software world.
 
-## What you get on first boot
+## Why Not Just Use Linux?
 
-The default image ships the MATE desktop — a traditional layout with a panel, a menu and
-a file manager, close enough to Windows that most people feel at home within minutes.
-Recent releases also offer Xfce as a lighter alternative, and a newer macOS-style
-desktop called Gershwin is appearing in recent builds.
+FreeBSD is not a Linux distribution, and it does not try to be one. It has its own kernel, its own drivers and its own userland tools, all developed together as one base system. Everything you install afterwards sits on top of that base as a separate layer.
 
-*Beyond the desktop, the practical parts are the tools the project built itself:*
+Compared with a beginner-friendly Linux distribution such as Ubuntu or Mint, the difference shows up in daily use in a few places:
 
-* **Software Station** — a graphical package manager. You search for an application,
-  click install, and it appears in the menu. It draws from the FreeBSD package
-  collection, which holds tens of thousands of programs.
-* **Update Station** — a one-click updater. On ZFS installations it applies updates
-  inside a boot environment, so if something goes wrong you can boot back into the
-  previous state instead of repairing a broken system.
-* **ZFS on root** — the installer uses the ZFS filesystem by default, which brings
-  snapshots, checksums and reliable storage on the desktop.
-* **Full disk encryption** — arrived with the 26.2 release, so a lost laptop no longer
-  means lost files.
+* **Updates do not interfere with applications.** The FreeBSD base is updated as a single unit, separately from installed programs.
+* **Configuration stays readable.** Services start through plain rc.d scripts instead of systemd, and system settings live in text files under /etc.
+* **ZFS is a first-class citizen.** The installer can set up a ZFS root filesystem with compression and snapshots, a feature desktop Linux still handles awkwardly.
+* **One lineage, not one thousand.** There are no competing forks to choose between; GhostBSD simply tracks FreeBSD releases.
 
-## GhostBSD vs a beginner Linux distribution
+## The MATE Desktop
 
-*If you have only used Linux, the table below shows where the two families differ in
-day-to-day use:*
+Boot the image and you land in a clean MATE desktop: applications menu, window list, clock, tray. Nothing hides the fact that this is FreeBSD - a terminal is one click away - but nothing forces you to open it either. Firefox comes preinstalled as the browser, along with an archive manager, a text editor and media tools, so the system is usable straight after installation.
 
-In practice the two feel more alike than different: you open a software manager, install
-programs, and get updates. The difference shows up underneath — a single coherent base
-system on the BSD side, assembled from many parts on the Linux side.
+## Installing Software
 
-## Installing it
+Software Station is the graphical package manager and the main way to add programs. You search by name, press Install, and it fetches the package from the FreeBSD repositories with pkg underneath. Those repositories carry more than 30,000 packages: LibreOffice, GIMP, VLC, Thunderbird, Chromium and Visual Studio Code are all there under the same names Linux users know.
 
-GhostBSD runs on 64-bit (amd64) hardware. The project lists 8 GB of RAM as the working
-minimum — it runs on 4 GB, just less comfortably — plus 15 GB of free disk space and a
-network connection.
+If you ever want to compile software with custom options, the FreeBSD ports tree is available too, but most desktop users will never touch it. The project documentation explains both approaches with examples.
 
-*With that in place, the whole process takes about half an hour:*
+## Keeping the System Updated
 
-1. **Download the ISO** from ghostbsd.org and verify the checksum shown next to it.
-2. **Write it to a USB stick** (4 GB or larger) with balenaEtcher, Rufus in DD mode, or
-   the `dd` command on an existing Unix system.
-3. **Boot the stick.** GhostBSD starts into a live session, and you can look around,
-   test Wi-Fi and check sound before touching the disk.
-4. **Run the installer** from the desktop. Pick the target disk, confirm the ZFS
-   layout, enable encryption if you want it, and create your user account and password.
-5. **Reboot, remove the stick, log in** and let Update Station pull the latest package
-   updates.
+Updates go through Update Station, a small application that checks for new versions on its own. It handles both package updates and base system upgrades, including major version jumps. For anyone arriving from Linux, this is the closest thing to a distro's update manager, and it removes most of the command-line work people associate with BSD.
 
-## Keeping the system current
+## System Requirements
 
-Day-to-day updates are point-and-click through Update Station, and it stays quiet in the
-background otherwise. If you prefer the terminal, the standard `pkg install`,
-`pkg upgrade` and `pkg search` commands work as on plain FreeBSD, since GhostBSD uses
-the same package repositories underneath. New system releases arrive a few times a year;
-our [Release Radar](/release-radar/) shows the newest versions of GhostBSD and hundreds
-of other projects, so you can watch for them without checking the site.
+The official download page lists modest hardware requirements, and any computer from the last eight years will pass:
 
-## Who it fits — and who should skip it
+* 64-bit (amd64) processor
+* 8 GB of RAM minimum
+* 15 GB of free disk space
+* A network connection during installation
 
-GhostBSD suits three groups well: people leaving Windows 10 after its end of support who
-want something familiar rather than minimal; Linux users curious about BSD who do not
-want to assemble a desktop by hand; and owners of older, well-supported laptops who need
-a light, stable system for browsing, documents and email. For finding replacements for
-the Windows and macOS programs you rely on, our [FOSS Alternatives](/foss-alternatives/)
-tool lists open-source options by category.
+In practice, lighter machines with 4 GB of RAM can still run MATE, but the official figure assumes a comfortable desktop with a modern browser open.
 
-Skip it for now if your machine is very new — the newest Wi-Fi chips and graphics cards
-often lack a driver in FreeBSD first — or if you need specific Windows-only games with
-anti-cheat. Neither is a GhostBSD defect; it is the general state of BSD desktop
-hardware support, and it is the one area where mainstream Linux distributions are
-usually ahead.
+## How to Install GhostBSD
 
-## Trying it without risk
+The installation flow is deliberately short and takes about fifteen minutes on modern hardware:
 
-The live USB session changes nothing on your disk, so the safest first step costs you
-nothing but a blank stick. When you do move to a real installation on your daily
-machine, back up first, and if you are carrying over documents with personal data,
-[encrypt them](/fosscrypt/) before they travel through the cloud or a shared USB stick.
-After that, GhostBSD behaves the way a desktop should: quietly, predictably, and with
-updates you can undo.
+1. Write the downloaded ISO to a USB drive of 8 GB or larger.
+2. Boot the machine from the USB stick. The image starts as a live system, so you can test hardware before installing anything.
+3. Launch the installer from the live desktop and answer a short list of questions: language, keyboard, disk.
+4. Choose ZFS or UFS for the root filesystem - ZFS is the recommended default.
+5. Create a user, set a password, and let the installer copy the system.
+6. Reboot, remove the USB stick, and log in to the installed desktop.
+
+After the first login, open Update Station and apply any pending updates before installing software.
+
+## Hardware Support
+
+Hardware support matches FreeBSD, which is strong in some areas and limited in others. Intel and AMD graphics work with open-source drivers, and NVIDIA cards have a proprietary driver available as a package. Wired Ethernet rarely causes problems. Wireless depends on the chip: many Intel cards work out of the box, while some Broadcom and Realtek chips need extra configuration. Checking the FreeBSD hardware notes before installing on a laptop saves frustration.
+
+## Who Should Try It?
+
+GhostBSD fits several types of users:
+
+* **The curious.** You want to see what BSD is like without reading a handbook before the first boot.
+* **Coming from macOS.** macOS is built on UNIX, and MATE with a terminal feels familiar without Apple's restrictions.
+* **People tired of distro churn.** One coherent base system changes little between releases, and updates do not rearrange your setup.
+* **Anyone who wants ZFS on a desktop** - snapshots and compression without setting up a server first.
+
+One practical tip after installation: protect the files that matter. The FossCrypt tool (/fosscrypt/) on this site encrypts single files on any system with OpenSSL, and once you start filling the system with software, Beta Radar (/beta-radar/) tracks beta releases of popular open-source tools.
+
+## The Bottom Line
+
+GhostBSD does one job well: it removes the barrier between ordinary users and FreeBSD. You get a desktop that installs in minutes, a software manager that works like the ones on Linux, and underneath, an operating system with a reputation for stability earned over decades. If you have ever wanted to see what the other side of free UNIX looks like, this is the easiest way to do it.
+
+**Download:** [GhostBSD 26.3 MATE 64-bit](https://www.ghostbsd.org/download) | [GhostBSD 26.3 Xfce 64-bit](https://www.ghostbsd.org/download) | [Torrent](https://www.ghostbsd.org/download) (Open Source)
+
+**Links:** [GhostBSD Home Page](https://www.ghostbsd.org/) | [Documentation Portal](https://ghostbsd-documentation-portal.readthedocs.io/) | [FAQ](https://ghostbsd-documentation-portal.readthedocs.io/en/latest/user/FAQ.html) | [Release News](https://www.ghostbsd.org/news/) | [GitHub](https://github.com/ghostbsd) | [FreeBSD Handbook](https://docs.freebsd.org/en/books/handbook/)
