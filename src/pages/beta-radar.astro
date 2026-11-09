@@ -1,0 +1,210 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+---
+
+<BaseLayout
+    title='Beta Radar'
+    description='The latest beta and release-candidate versions from 100 popular open-source apps — Brave, Telegram, OBS Studio, Immich, qBittorrent and more — refreshed automatically every day.'
+>
+    <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
+        Beta Radar
+    </h1>
+
+    <p class='text-center text-stone-600 dark:text-stone-300 max-w-3xl mx-auto -mt-2 mb-8'>
+        The newest beta and release-candidate versions of popular open-source software — 100
+        projects across eight categories, refreshed automatically every day.
+    </p>
+
+    <div class='not-prose max-w-5xl mx-auto px-4'>
+        <input
+            id='f-search'
+            type='search'
+            placeholder='Search projects, e.g. "telegram"…'
+            class='w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-4 py-2.5'
+        />
+        <div class='flex flex-wrap justify-center items-center gap-2 my-4' id='f-cats'></div>
+        <p id='radar-count' class='text-center text-sm text-stone-500 dark:text-stone-400 mb-4'></p>
+    </div>
+
+    <div id='radar-list' class='grid gap-4 md:grid-cols-2 not-prose'></div>
+    <p id='radar-status' class='text-center text-sm text-stone-500 dark:text-stone-400 my-6'></p>
+
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-10'>
+        <h2>What is the Beta Radar?</h2>
+        <p>
+            Before a new version of an open-source app ships to everyone, it usually spends a few
+            weeks as a <strong>beta</strong> or <strong>release candidate</strong>: a test build
+            published on GitHub so that curious users can try the upcoming features early and
+            report bugs. These test builds are easy to miss — they are not announced everywhere,
+            and most news sites only cover the final releases. This page fixes that. We track
+            <strong>up to 100 well-known free and open-source projects</strong> — browsers,
+            messengers, media tools, self-hosted servers, developer tools and utilities — and show
+            their latest public beta at a glance, newest first, together with the current stable
+            version for comparison.
+        </p>
+
+        <h2>What counts as a beta?</h2>
+        <p>
+            A beta is any version a project publishes on GitHub and explicitly marks as a
+            pre-release: tags like <code>beta</code>, <code>rc</code> (release candidate),
+            <code>alpha</code>, <code>preview</code>, <code>canary</code> or <code>nightly</code>.
+            Some projects publish a test build every week, others only before a big release. A
+            beta is feature-complete but not fully polished — expect rough edges, occasional
+            crashes and settings that move around between builds. Betas older than twelve months
+            are not shown, so everything on this page is genuinely recent.
+        </p>
+
+        <h2>Should you install beta versions?</h2>
+        <p>
+            It depends on what the app does for you. <strong>Fine for trying</strong>: browsers
+            like Brave Beta, editors like Zed or Lapce, media players and desktop utilities — if
+            the app breaks, you can reinstall the stable version. <strong>Think twice
+            before</strong>: self-hosted servers such as Nextcloud, Gitea or Immich — a beta on a
+            live server can mean broken sync, corrupted databases or a downgrade path that does
+            not exist. And never install a beta of a password manager or messenger on your only
+            device. Two simple rules: keep a backup before upgrading, and read the release notes —
+            every card on this page links straight to the changelog.
+        </p>
+
+        <h2>How fresh is this data?</h2>
+        <p>
+            The list is collected automatically every morning (around 08:00 in Central European
+            time) when the site rebuilds, and again after every content update. The data arrives
+            as a small ready-made file from our own server — so it loads instantly and is never
+            blocked by GitHub's rate limits. Each card shows the beta tag, when it was published,
+            the project category and the current stable version, so you can see at a glance how
+            far ahead of the stable channel a project currently is.
+        </p>
+
+        <h2>Reading each card</h2>
+        <p>
+            The bold name links to the beta release page on GitHub, where you will find the
+            changelog and download files. The tag (for example <code>v1.12.34-rc.1</code>) is the
+            version identifier, and the date tells you how fresh the beta is. The
+            <em>Stable</em> line shows the latest full release of the same project — if the beta
+            and stable tags are close, the new version is nearly ready. Use the category chips to
+            narrow the list, or search for a specific project.
+        </p>
+    </article>
+</BaseLayout>
+
+<script>
+    interface Beta {
+        repo: string; name: string; cat: string
+        tag: string; title: string; date: string; url: string
+        stableTag: string; stableDate: string
+    }
+
+    let ALL: Beta[] = []
+    let TOTAL = 0
+    let cat = 'All'
+    let q = ''
+
+    const listEl = document.getElementById('radar-list') as HTMLElement
+    const statusEl = document.getElementById('radar-status') as HTMLElement
+    const countEl = document.getElementById('radar-count') as HTMLElement
+    const catsEl = document.getElementById('f-cats') as HTMLElement
+    const searchEl = document.getElementById('f-search') as HTMLInputElement
+
+    const esc = (s: string) =>
+        s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+
+    const rel = (iso: string) => {
+        if (!iso) return 'recently'
+        const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+        if (days <= 0) return 'today'
+        if (days === 1) return 'yesterday'
+        if (days < 30) return days + ' days ago'
+        const months = Math.floor(days / 30)
+        if (months < 12) return months === 1 ? '1 month ago' : months + ' months ago'
+        const years = Math.floor(days / 365)
+        return years === 1 ? '1 year ago' : years + ' years ago'
+    }
+
+    const filtered = () =>
+        ALL.filter(
+            (r) =>
+                (cat === 'All' || r.cat === cat) &&
+                (q === '' || (r.name + ' ' + r.repo + ' ' + r.tag + ' ' + r.title).toLowerCase().includes(q))
+        )
+
+    const renderChips = () => {
+        const names = ['All', ...new Set(ALL.map((r) => r.cat))]
+        catsEl.innerHTML = names
+            .map((c) => {
+                const active = c === cat
+                const cls = active
+                    ? 'rounded-full px-3 py-1 text-sm bg-stone-900 text-white dark:bg-white dark:text-stone-900'
+                    : 'rounded-full px-3 py-1 text-sm border border-stone-300 dark:border-stone-700 hover:border-stone-500 transition-colors'
+                return `<button data-cat='${esc(c)}' class='${cls}'>${esc(c)}</button>`
+            })
+            .join('')
+        catsEl.querySelectorAll('button').forEach((b) =>
+            b.addEventListener('click', () => {
+                cat = (b as HTMLElement).dataset.cat || 'All'
+                renderChips()
+                render()
+            })
+        )
+    }
+
+    const render = () => {
+        const items = filtered()
+        countEl.textContent = `Showing ${items.length} of ${TOTAL} tracked projects`
+        if (!items.length) {
+            listEl.innerHTML = ''
+            countEl.textContent = 'No matches — try a shorter search term.'
+            return
+        }
+        listEl.innerHTML = items
+            .map((r) => {
+                const avatar = `https://github.com/${r.repo.split('/')[0]}.png?size=80`
+                const sub = r.title && r.title !== r.tag ? r.title : ''
+                const stable = r.stableTag
+                    ? ` · Stable: <span class='whitespace-nowrap'>${esc(r.stableTag)}</span>`
+                    : ''
+                return `
+                <div class='rounded-lg border border-stone-200 dark:border-stone-800 p-5'>
+                    <div class='flex items-start gap-3'>
+                        <img src='${esc(avatar)}' alt='' loading='lazy' class='rounded-full w-10 h-10 shrink-0' />
+                        <div class='min-w-0'>
+                            <a href='${esc(r.url)}' target='_blank' rel='noopener noreferrer'
+                                class='font-semibold break-words hover:underline'>${esc(r.name)}</a>
+                            <span class='ml-2 rounded border border-amber-500/60 bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-700 dark:text-amber-400'>${esc(r.tag)}</span>
+                            ${sub ? `<p class='text-sm text-stone-600 dark:text-stone-300 mt-1'>${esc(sub)}</p>` : ''}
+                            <p class='text-xs text-stone-500 dark:text-stone-400 mt-1.5'>
+                                Beta published ${esc(rel(r.date))}${stable} · ${esc(r.cat)}
+                            </p>
+                        </div>
+                    </div>
+                </div>`
+            })
+            .join('')
+    }
+
+    const load = async () => {
+        statusEl.textContent = 'Loading beta data…'
+        try {
+            const res = await fetch(`/data/betas.json?d=${new Date().toISOString().slice(0, 10)}`)
+            if (!res.ok) throw new Error('HTTP ' + res.status)
+            const data = await res.json()
+            ALL = (data.items || []) as Beta[]
+            TOTAL = data.total || ALL.length
+            if (!ALL.length) {
+                statusEl.textContent = 'No beta data available yet — the list is refreshed automatically every day.'
+                return
+            }
+            renderChips()
+            render()
+            statusEl.textContent = ''
+        } catch {
+            statusEl.textContent = 'Could not load beta data. Please refresh the page in a minute.'
+        }
+    }
+
+    searchEl.addEventListener('input', () => {
+        q = searchEl.value.trim().toLowerCase()
+        render()
+    })
+    load()
+</script>
