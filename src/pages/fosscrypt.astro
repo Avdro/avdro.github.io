@@ -1,0 +1,472 @@
+---
+import BaseLayout from '@/layouts/BaseLayout'
+---
+
+<BaseLayout
+    title='FossCrypt — Encrypt Files in Your Browser (Free, No Upload)'
+    description='FossCrypt is a free browser-based file encryptor: drop a file, add a password, download an encrypted copy. Argon2id + XChaCha20-Poly1305, fully local — nothing is ever uploaded.'
+>
+    <h1 class='text-center text-4xl md:text-6xl font-semibold my-8'>
+        FossCrypt
+    </h1>
+
+    <p class='text-center text-stone-600 dark:text-stone-300 max-w-3xl mx-auto -mt-2 mb-8'>
+        Encrypt files in your browser, nothing leaves your device. Drop a file, pick a password,
+        download the encrypted result. Free, no account, no upload.
+    </p>
+
+    <script is:inline src='/libs/libsodium.js'></script>
+    <script is:inline src='/libs/sodium-wrappers.js'></script>
+
+    <div class='not-prose max-w-3xl mx-auto px-4'>
+        <div class='flex justify-center'>
+            <p class='inline-flex items-center gap-2 text-sm rounded-full border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 px-4 py-1.5'>
+                <svg class='w-4 h-4 shrink-0' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>
+                    <rect x='4' y='11' width='16' height='10' rx='2'></rect>
+                    <path d='M8 11V7a4 4 0 0 1 8 0v4'></path>
+                </svg>
+                100% local — your file never leaves this device
+            </p>
+        </div>
+
+        <div class='flex justify-center gap-2 mt-6'>
+            <button id='fc-tab-enc' type='button'
+                class='rounded-full px-5 py-2 text-sm font-semibold bg-stone-900 text-white dark:bg-white dark:text-stone-900'>Encrypt</button>
+            <button id='fc-tab-dec' type='button'
+                class='rounded-full px-5 py-2 text-sm font-semibold border border-stone-300 dark:border-stone-700 hover:border-stone-500 transition-colors'>Decrypt</button>
+        </div>
+
+        <div id='fc-drop'
+            class='mt-6 border-2 border-dashed rounded-xl p-10 text-center cursor-pointer border-stone-300 dark:border-stone-700 hover:border-stone-500 dark:hover:border-stone-400 transition-colors'
+            role='button' tabindex='0' aria-label='Choose a file to encrypt or decrypt'>
+            <input type='file' id='fc-file' class='hidden' />
+            <div id='fc-drop-empty'>
+                <svg class='w-10 h-10 mx-auto text-stone-400' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>
+                    <path d='M12 3v12'></path>
+                    <path d='m7 10 5 5 5-5'></path>
+                    <path d='M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2'></path>
+                </svg>
+                <p class='mt-3 font-medium'>Drag &amp; drop a file here</p>
+                <p class='text-sm text-stone-500 dark:text-stone-400'>or click to choose a file</p>
+            </div>
+            <div id='fc-drop-file' class='hidden'>
+                <p id='fc-file-name' class='font-semibold break-all'></p>
+                <p id='fc-file-size' class='text-sm text-stone-500 dark:text-stone-400'></p>
+                <p class='text-sm text-stone-500 dark:text-stone-400 mt-1'>Click to choose a different file</p>
+            </div>
+        </div>
+
+        <div class='mt-6'>
+            <label for='fc-pass' class='block text-sm font-medium mb-1'>Password</label>
+            <div class='relative'>
+                <input id='fc-pass' type='password' autocomplete='new-password'
+                    class='w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-3 py-2 pr-16' />
+                <button id='fc-eye' type='button'
+                    class='absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors px-2 py-1'>Show</button>
+            </div>
+            <div id='fc-pass2-wrap' class='mt-3'>
+                <label for='fc-pass2' class='block text-sm font-medium mb-1'>Repeat password</label>
+                <input id='fc-pass2' type='password' autocomplete='new-password'
+                    class='w-full rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-[#0a0910] px-3 py-2' />
+            </div>
+            <p class='text-xs text-stone-500 dark:text-stone-400 mt-2'>
+                Use a long passphrase — 12+ characters. There is no password recovery: if you lose
+                the password, the file cannot be opened again. That is the point.
+            </p>
+        </div>
+
+        <div class='flex justify-center mt-6'>
+            <button id='fc-go' type='button' disabled
+                class='rounded-lg bg-stone-900 text-white dark:bg-white dark:text-stone-900 px-8 py-3 text-sm font-semibold hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed'>
+                Encrypt file
+            </button>
+        </div>
+
+        <p id='fc-status' class='text-center text-sm text-stone-500 dark:text-stone-400 my-6'></p>
+
+        <div id='fc-result' hidden class='rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3 text-sm'>
+            <p id='fc-result-text' class='font-medium text-emerald-800 dark:text-emerald-300'></p>
+            <p class='text-emerald-800/80 dark:text-emerald-300/80 mt-1'>
+                The file was saved to your downloads. It was created on this device — no server was
+                involved at any point.
+            </p>
+            <div class='flex flex-wrap gap-3 mt-3'>
+                <a id='fc-dl' href='#'
+                    class='rounded-lg bg-stone-900 text-white dark:bg-white dark:text-stone-900 px-4 py-2 text-xs font-semibold hover:opacity-80 transition-opacity'>Download again</a>
+                <button id='fc-again' type='button'
+                    class='rounded-lg border border-stone-300 dark:border-stone-700 px-4 py-2 text-xs font-semibold hover:border-stone-500 transition-colors'>Encrypt another file</button>
+            </div>
+        </div>
+    </div>
+
+    <article class='prose prose-lg md:prose-xl dark:prose-invert min-w-full py-10'>
+        <h2>What is FossCrypt?</h2>
+        <p>
+            FossCrypt is a free file encryption tool that runs entirely in your browser. You give it
+            a file and a password, and it produces an encrypted copy that can only be opened with
+            that same password. The file is never uploaded anywhere: all the math happens on your
+            own device, inside this page. There is no account to create, no limit to accept, and no
+            copy of your data sitting on some server.
+        </p>
+        <p>
+            Typical uses: sending a scanned passport or a contract over email or a messenger,
+            archiving documents with sensitive information, or handing a file to a cloud drive you
+            do not fully trust. Encrypt it first with FossCrypt, and the channel only ever carries
+            an unreadable blob.
+        </p>
+
+        <h2>How to use it</h2>
+        <ol>
+            <li><strong>Pick the mode.</strong> <em>Encrypt</em> protects a file; <em>Decrypt</em> opens a file that was encrypted with FossCrypt before (it carries the <code>.foss</code> extension).</li>
+            <li><strong>Drop the file</strong> into the box — drag it in or click to choose. The file stays on your device.</li>
+            <li><strong>Type a password</strong> and, in encrypt mode, repeat it. Long passphrases beat short complicated ones: four random words are easier to remember and harder to brute-force than <code>P@ss1!</code>.</li>
+            <li><strong>Press the button.</strong> A second or two later the encrypted (or decrypted) file is downloaded automatically.</li>
+        </ol>
+        <p>
+            Sharing with someone? Send them the encrypted file one way — email, chat, cloud — and
+            the password a <em>different</em> way: a phone call, an SMS, a meeting. If an attacker
+            intercepts only one of the two, they still have nothing.
+        </p>
+
+        <h2>The crypto inside, in plain words</h2>
+        <p>
+            FossCrypt does not invent its own cryptography. It uses libsodium, a widely audited,
+            industry-standard library, with two building blocks:
+        </p>
+        <ul>
+            <li>
+                <strong>Argon2id</strong> turns your password into a 256-bit encryption key. Argon2id
+                is the winner of the Password Hashing Competition and is deliberately slow and
+                memory-hungry, which makes massive password guessing on GPUs and specialized
+                hardware expensive. Each file gets its own random 128-bit salt, so two files with
+                the same password still produce completely different keys and different ciphertexts.
+            </li>
+            <li>
+                <strong>XChaCha20-Poly1305</strong> then encrypts the file. It is an
+                <em>authenticated</em> scheme (AEAD): besides scrambling the content, it computes a
+                Poly1305 tag, so any modification of the encrypted file — even a single flipped bit —
+                is detected and decryption refuses to produce a result. The nonce is a random
+                192-bit value, fresh for every file, and the file header is authenticated too, so
+                tampering with the salt or version markers is also caught.
+            </li>
+        </ul>
+        <p>
+            The original file name is not written in the clear either: it is encrypted together
+            with the file contents, so the <code>.foss</code> file on a flash drive or in an email
+            attachment reveals nothing about what is inside until the correct password is supplied.
+        </p>
+
+        <h2>Nothing leaves your device</h2>
+        <p>
+            The encryption runs in JavaScript and WebAssembly on your machine. The crypto engine is
+            served from this website itself — no third-party CDN is involved — and once the page
+            has loaded, it even keeps working with your connection switched off. No cookies, no
+            analytics on this page, no accounts, no logs: there is simply no server component to
+            receive anything. Curious? Open your browser's developer tools, switch to the Network
+            tab, and encrypt a file — you will see zero requests leave the page.
+        </p>
+
+        <h2>File format and limits</h2>
+        <p>
+            A FossCrypt file is a small, documented header followed by the encrypted payload:
+        </p>
+        <table>
+            <thead>
+                <tr><th>Bytes</th><th>Contents</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>0–8</td><td>Magic marker <code>FOSSCRYPT</code></td></tr>
+                <tr><td>9</td><td>Format version (currently 1)</td></tr>
+                <tr><td>10</td><td>Key-derivation strength used</td></tr>
+                <tr><td>11–26</td><td>Random 128-bit salt for Argon2id</td></tr>
+                <tr><td>27–50</td><td>Random 192-bit nonce</td></tr>
+                <tr><td>51+</td><td>XChaCha20-Poly1305 ciphertext (file name + contents + 16-byte auth tag)</td></tr>
+            </tbody>
+        </table>
+        <p>
+            Practical limits: the file is processed in memory, so on an ordinary computer anything
+            up to a few hundred megabytes is comfortable; on phones be a little more conservative.
+            And the one thing FossCrypt cannot do is recover a lost password — there is no back
+            door, no reset link and no "hint", because there is no server holding anything. If the
+            password is gone, the data is gone. For important files, store the passphrase in a
+            password manager.
+        </p>
+    </article>
+</BaseLayout>
+
+<script>
+    const dropEl = document.getElementById('fc-drop') as HTMLDivElement
+    const fileInput = document.getElementById('fc-file') as HTMLInputElement
+    const dropEmptyEl = document.getElementById('fc-drop-empty') as HTMLDivElement
+    const dropFileEl = document.getElementById('fc-drop-file') as HTMLDivElement
+    const fileNameEl = document.getElementById('fc-file-name') as HTMLElement
+    const fileSizeEl = document.getElementById('fc-file-size') as HTMLElement
+    const tabEnc = document.getElementById('fc-tab-enc') as HTMLButtonElement
+    const tabDec = document.getElementById('fc-tab-dec') as HTMLButtonElement
+    const passEl = document.getElementById('fc-pass') as HTMLInputElement
+    const pass2El = document.getElementById('fc-pass2') as HTMLInputElement
+    const pass2Wrap = document.getElementById('fc-pass2-wrap') as HTMLDivElement
+    const eyeEl = document.getElementById('fc-eye') as HTMLButtonElement
+    const goEl = document.getElementById('fc-go') as HTMLButtonElement
+    const statusEl = document.getElementById('fc-status') as HTMLElement
+    const resultEl = document.getElementById('fc-result') as HTMLDivElement
+    const resultTextEl = document.getElementById('fc-result-text') as HTMLElement
+    const dlLink = document.getElementById('fc-dl') as HTMLAnchorElement
+    const againEl = document.getElementById('fc-again') as HTMLButtonElement
+
+    const MAGIC = new TextEncoder().encode('FOSSCRYPT')
+    const VERSION = 1
+    const HEADER_LEN = MAGIC.length + 1 + 1 + 16 + 24 // magic + version + params + salt + nonce
+
+    let mode: 'encrypt' | 'decrypt' = 'encrypt'
+    let file: File | null = null
+    let ready = false
+    let busy = false
+    let blobUrl: string | null = null
+
+    const fmtSize = (n: number) => {
+        if (n < 1024) return n + ' B'
+        if (n < 1048576) return (n / 1024).toFixed(1) + ' KB'
+        if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB'
+        return (n / 1073741824).toFixed(2) + ' GB'
+    }
+
+    const tick = (ms = 30) => new Promise((r) => setTimeout(r, ms))
+
+    const setStatus = (msg: string, kind: 'info' | 'error' | 'ok' = 'info') => {
+        statusEl.textContent = msg
+        statusEl.classList.remove('text-red-500', 'text-emerald-600', 'dark:text-emerald-400')
+        if (kind === 'error') statusEl.classList.add('text-red-500')
+        if (kind === 'ok') statusEl.classList.add('text-emerald-600', 'dark:text-emerald-400')
+    }
+
+    const setButtonLabel = () => {
+        goEl.textContent = busy ? 'Working…' : mode === 'encrypt' ? 'Encrypt file' : 'Decrypt file'
+    }
+
+    const activeCls = ['bg-stone-900', 'text-white', 'dark:bg-white', 'dark:text-stone-900']
+    const inactiveCls = ['border', 'border-stone-300', 'dark:border-stone-700', 'hover:border-stone-500', 'transition-colors']
+
+    const setMode = (m: 'encrypt' | 'decrypt') => {
+        mode = m
+        const apply = (el: HTMLButtonElement, isActive: boolean) => {
+            el.classList.remove(...activeCls, ...inactiveCls)
+            el.classList.add(...(isActive ? activeCls : inactiveCls))
+        }
+        apply(tabEnc, m === 'encrypt')
+        apply(tabDec, m === 'decrypt')
+        pass2Wrap.classList.toggle('hidden', m === 'decrypt')
+        setButtonLabel()
+    }
+
+    const showFile = (f: File) => {
+        file = f
+        dropEmptyEl.classList.add('hidden')
+        dropFileEl.classList.remove('hidden')
+        fileNameEl.textContent = f.name
+        fileSizeEl.textContent = fmtSize(f.size)
+    }
+
+    const pickFile = () => { if (!busy) fileInput.click() }
+
+    dropEl.addEventListener('click', pickFile)
+    dropEl.addEventListener('keydown', (e) => {
+        if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+            e.preventDefault()
+            pickFile()
+        }
+    })
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files[0]) showFile(fileInput.files[0])
+    })
+    dropEl.addEventListener('dragover', (e) => {
+        e.preventDefault()
+        dropEl.classList.add('border-stone-500', 'dark:border-stone-400', 'bg-stone-50', 'dark:bg-stone-900/40')
+    })
+    dropEl.addEventListener('dragleave', () => {
+        dropEl.classList.remove('border-stone-500', 'dark:border-stone-400', 'bg-stone-50', 'dark:bg-stone-900/40')
+    })
+    dropEl.addEventListener('drop', (e) => {
+        e.preventDefault()
+        dropEl.classList.remove('border-stone-500', 'dark:border-stone-400', 'bg-stone-50', 'dark:bg-stone-900/40')
+        const f = (e as DragEvent).dataTransfer?.files
+        if (f && f[0]) showFile(f[0])
+    })
+    // запрещаем браузеру открывать файл, если промахнулись мимо зоны
+    ;['dragover', 'drop'].forEach((ev) => window.addEventListener(ev, (e) => e.preventDefault()))
+
+    tabEnc.addEventListener('click', () => setMode('encrypt'))
+    tabDec.addEventListener('click', () => setMode('decrypt'))
+
+    eyeEl.addEventListener('click', () => {
+        const show = passEl.type === 'password'
+        passEl.type = show ? 'text' : 'password'
+        pass2El.type = show ? 'text' : 'password'
+        eyeEl.textContent = show ? 'Hide' : 'Show'
+    })
+
+    passEl.addEventListener('keydown', (e) => {
+        if ((e as KeyboardEvent).key === 'Enter') goEl.click()
+    })
+
+    againEl.addEventListener('click', () => {
+        resultEl.hidden = true
+        file = null
+        fileInput.value = ''
+        passEl.value = ''
+        pass2El.value = ''
+        dropFileEl.classList.add('hidden')
+        dropEmptyEl.classList.remove('hidden')
+        setStatus('')
+    })
+
+    const getSodium = async (): Promise<any> => {
+        const w = window as any
+        for (let i = 0; i < 100 && !w.sodium; i++) await new Promise((r) => setTimeout(r, 100))
+        if (!w.sodium) throw new Error('The crypto engine failed to load — please reload the page.')
+        await w.sodium.ready
+        return w.sodium
+    }
+
+    const deriveKey = (S: any, pass: string, salt: Uint8Array, params: number): Uint8Array => {
+        // params: 0 = interactive (2 passes, 64 MB), 1 = moderate (3 passes, 256 MB)
+        const alg = S.crypto_pwhash_ALG_ARGON2ID13
+        if (params === 1) {
+            return S.crypto_pwhash(32, pass, salt, 3, S.crypto_pwhash_MEMLIMIT_MODERATE, alg)
+        }
+        return S.crypto_pwhash(32, pass, salt, 2, S.crypto_pwhash_MEMLIMIT_INTERACTIVE, alg)
+    }
+
+    const save = (bytes: Uint8Array, name: string) => {
+        if (blobUrl) URL.revokeObjectURL(blobUrl)
+        blobUrl = URL.createObjectURL(new Blob([bytes]))
+        dlLink.href = blobUrl
+        dlLink.download = name
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = name
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+    }
+
+    const run = async () => {
+        if (busy || !ready) return
+        const S = await getSodium()
+        const pass = passEl.value
+
+        resultEl.hidden = true
+        if (!file) return setStatus('Choose a file first.', 'error')
+        if (!pass) return setStatus('Enter a password first.', 'error')
+        if (mode === 'encrypt' && pass !== pass2El.value)
+            return setStatus('The two passwords do not match.', 'error')
+
+        busy = true
+        goEl.disabled = true
+        setButtonLabel()
+        try {
+            const bytes = new Uint8Array(await file.arrayBuffer())
+
+            if (mode === 'encrypt') {
+                setStatus('Deriving the key (Argon2id)…')
+                await tick()
+                const salt = S.randombytes_buf(16)
+                let params = 1
+                let key: Uint8Array
+                try {
+                    key = S.crypto_pwhash(32, pass, salt, 3, S.crypto_pwhash_MEMLIMIT_MODERATE, S.crypto_pwhash_ALG_ARGON2ID13)
+                } catch {
+                    // мало памяти (например, телефон) — мягкий режим
+                    params = 0
+                    key = deriveKey(S, pass, salt, 0)
+                }
+                const nonce = S.randombytes_buf(24)
+
+                setStatus('Encrypting…')
+                await tick()
+                const nameBytes = new TextEncoder().encode(file.name)
+                const lenBytes = new Uint8Array([(nameBytes.length >> 8) & 255, nameBytes.length & 255])
+                const plaintext = new Uint8Array(2 + nameBytes.length + bytes.length)
+                plaintext.set(lenBytes, 0)
+                plaintext.set(nameBytes, 2)
+                plaintext.set(bytes, 2 + nameBytes.length)
+
+                const header = new Uint8Array(HEADER_LEN)
+                header.set(MAGIC, 0)
+                header[MAGIC.length] = VERSION
+                header[MAGIC.length + 1] = params
+                header.set(salt, MAGIC.length + 2)
+                header.set(nonce, MAGIC.length + 2 + 16)
+
+                const ct = S.crypto_aead_xchacha20poly1305_ietf_encrypt(plaintext, header, null, nonce, key)
+                const out = new Uint8Array(HEADER_LEN + ct.length)
+                out.set(header, 0)
+                out.set(ct, HEADER_LEN)
+
+                const outName = file.name + '.foss'
+                save(out, outName)
+                setStatus('Encrypted: ' + outName, 'ok')
+                resultTextEl.textContent = 'Done — ' + outName + ' (' + fmtSize(out.length) + ') saved.'
+                againEl.textContent = 'Encrypt another file'
+            } else {
+                if (bytes.length <= HEADER_LEN + 16 || MAGIC.some((b, i) => bytes[i] !== b))
+                    return setStatus('This is not a FossCrypt file. Use the Encrypt tab to protect a new file.', 'error')
+                if (bytes[MAGIC.length] !== VERSION)
+                    return setStatus('This file was created with a different FossCrypt version.', 'error')
+
+                const params = bytes[MAGIC.length + 1]
+                const salt = bytes.slice(MAGIC.length + 2, MAGIC.length + 2 + 16)
+                const nonce = bytes.slice(MAGIC.length + 2 + 16, HEADER_LEN)
+                const header = bytes.slice(0, HEADER_LEN)
+
+                setStatus('Deriving the key (Argon2id)…')
+                await tick()
+                let key: Uint8Array
+                try {
+                    key = deriveKey(S, pass, salt, params)
+                } catch {
+                    return setStatus('This file needs more memory to decrypt than this device can offer.', 'error')
+                }
+
+                setStatus('Decrypting…')
+                await tick()
+                let pt: Uint8Array
+                try {
+                    pt = S.crypto_aead_xchacha20poly1305_ietf_decrypt(null, bytes.subarray(HEADER_LEN), header, nonce, key)
+                } catch {
+                    return setStatus('Wrong password, or the file is corrupted.', 'error')
+                }
+
+                const nameLen = (pt[0] << 8) | pt[1]
+                let name = new TextDecoder().decode(pt.subarray(2, 2 + nameLen))
+                    .replace(/[\u0000-\u001f\u007f/\\]/g, '')
+                    .trim()
+                if (!name) name = 'decrypted-file'
+                save(pt.subarray(2 + nameLen), name)
+                setStatus('Decrypted: ' + name, 'ok')
+                resultTextEl.textContent = 'Done — ' + name + ' (' + fmtSize(pt.length - 2 - nameLen) + ') saved.'
+                againEl.textContent = 'Decrypt another file'
+            }
+            resultEl.hidden = false
+        } catch (err: any) {
+            setStatus(err?.message ? 'Error: ' + err.message : 'Something went wrong — please try again.', 'error')
+        } finally {
+            busy = false
+            goEl.disabled = false
+            setButtonLabel()
+        }
+    }
+
+    goEl.addEventListener('click', run)
+
+    // инициализация
+    setMode('encrypt')
+    setStatus('Loading the crypto engine…')
+    getSodium()
+        .then(() => {
+            ready = true
+            goEl.disabled = false
+            setStatus('')
+        })
+        .catch((e) => setStatus(e.message, 'error'))
+</script>
