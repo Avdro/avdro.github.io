@@ -1,0 +1,124 @@
+---
+heroImage: /src/assets/images/ghostbsd.png
+category: Operating Systems
+description: 'GhostBSD is a desktop operating system built on FreeBSD with the MATE desktop, ZFS support and simple tools. Here is what it offers and how to install it.'
+pubDate: 2026-11-08T22:00:00.000Z
+tags:
+  - linux
+  - migration
+  - beginners
+  - alternatives
+title: 'GhostBSD: A Beginner-Friendly Desktop Built on FreeBSD'
+---
+
+Most people who want to leave Windows or macOS reach for Linux first. There is a second
+family of free desktop systems, though — the BSDs — and the easiest one to try is
+GhostBSD. It takes the FreeBSD base, adds a ready-made desktop and a set of simple
+graphical tools, and puts all of it in an installer you can run in one afternoon. This
+guide explains what GhostBSD is, what it ships with, and how to get it onto a spare
+computer.
+
+## What is GhostBSD?
+
+GhostBSD is a desktop-oriented operating system built on top of FreeBSD, the well-known
+server operating system that traces its roots back to the University of California,
+Berkeley. The project has been around since 2009 and is maintained by Eric Turgeon
+together with community contributors. Where plain FreeBSD expects you to assemble a
+desktop yourself, GhostBSD hands you a complete one: the MATE desktop comes configured
+out of the box, and the whole system boots as a live session before you install anything.
+
+Since 2025 the project uses a year-month naming scheme, so releases look like
+25.02-R14.3p2 or 26.2-R15.1p6: the first number is the release date, the R-number is the
+FreeBSD RELEASE the build is based on. That matters, because it tells you exactly which
+kernel and base system you are getting. Each GhostBSD release tracks a matching FreeBSD
+RELEASE instead of a moving development branch, so the base of your system changes only
+when you deliberately upgrade to a new release.
+
+## What you get on first boot
+
+The default image ships the MATE desktop — a traditional layout with a panel, a menu and
+a file manager, close enough to Windows that most people feel at home within minutes.
+Recent releases also offer Xfce as a lighter alternative, and a newer macOS-style
+desktop called Gershwin is appearing in recent builds.
+
+*Beyond the desktop, the practical parts are the tools the project built itself:*
+
+* **Software Station** — a graphical package manager. You search for an application,
+  click install, and it appears in the menu. It draws from the FreeBSD package
+  collection, which holds tens of thousands of programs.
+* **Update Station** — a one-click updater. On ZFS installations it applies updates
+  inside a boot environment, so if something goes wrong you can boot back into the
+  previous state instead of repairing a broken system.
+* **ZFS on root** — the installer uses the ZFS filesystem by default, which brings
+  snapshots, checksums and reliable storage on the desktop.
+* **Full disk encryption** — arrived with the 26.2 release, so a lost laptop no longer
+  means lost files.
+
+## GhostBSD vs a beginner Linux distribution
+
+*If you have only used Linux, the table below shows where the two families differ in
+day-to-day use:*
+
+|   |   |   |
+| - | - | - |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+|   |   |   |
+
+In practice the two feel more alike than different: you open a software manager, install
+programs, and get updates. The difference shows up underneath — a single coherent base
+system on the BSD side, assembled from many parts on the Linux side.
+
+## Installing it
+
+GhostBSD runs on 64-bit (amd64) hardware. The project lists 8 GB of RAM as the working
+minimum — it runs on 4 GB, just less comfortably — plus 15 GB of free disk space and a
+network connection.
+
+*With that in place, the whole process takes about half an hour:*
+
+1. **Download the ISO** from ghostbsd.org and verify the checksum shown next to it.
+2. **Write it to a USB stick** (4 GB or larger) with balenaEtcher, Rufus in DD mode, or
+   the `dd` command on an existing Unix system.
+3. **Boot the stick.** GhostBSD starts into a live session, and you can look around,
+   test Wi-Fi and check sound before touching the disk.
+4. **Run the installer** from the desktop. Pick the target disk, confirm the ZFS
+   layout, enable encryption if you want it, and create your user account and password.
+5. **Reboot, remove the stick, log in** and let Update Station pull the latest package
+   updates.
+
+## Keeping the system current
+
+Day-to-day updates are point-and-click through Update Station, and it stays quiet in the
+background otherwise. If you prefer the terminal, the standard `pkg install`,
+`pkg upgrade` and `pkg search` commands work as on plain FreeBSD, since GhostBSD uses
+the same package repositories underneath. New system releases arrive a few times a year;
+our [Release Radar](/release-radar/) shows the newest versions of GhostBSD and hundreds
+of other projects, so you can watch for them without checking the site.
+
+## Who it fits — and who should skip it
+
+GhostBSD suits three groups well: people leaving Windows 10 after its end of support who
+want something familiar rather than minimal; Linux users curious about BSD who do not
+want to assemble a desktop by hand; and owners of older, well-supported laptops who need
+a light, stable system for browsing, documents and email. For finding replacements for
+the Windows and macOS programs you rely on, our [FOSS Alternatives](/foss-alternatives/)
+tool lists open-source options by category.
+
+Skip it for now if your machine is very new — the newest Wi-Fi chips and graphics cards
+often lack a driver in FreeBSD first — or if you need specific Windows-only games with
+anti-cheat. Neither is a GhostBSD defect; it is the general state of BSD desktop
+hardware support, and it is the one area where mainstream Linux distributions are
+usually ahead.
+
+## Trying it without risk
+
+The live USB session changes nothing on your disk, so the safest first step costs you
+nothing but a blank stick. When you do move to a real installation on your daily
+machine, back up first, and if you are carrying over documents with personal data,
+[encrypt them](/fosscrypt/) before they travel through the cloud or a shared USB stick.
+After that, GhostBSD behaves the way a desktop should: quietly, predictably, and with
+updates you can undo.
