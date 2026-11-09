@@ -151,9 +151,14 @@ import BaseLayout from '@/layouts/BaseLayout'
             </li>
         </ul>
         <p>
-            The original file name is not written in the clear either: it is encrypted together
-            with the file contents, so the <code>.foss</code> file on a flash drive or in an email
-            attachment reveals nothing about what is inside until the correct password is supplied.
+            FossCrypt does not rename your file — it simply adds <code>.foss</code> to the
+            end of the name, so <code>report.pdf</code> becomes <code>report.pdf.foss</code>.
+            You are free to rename the result yourself afterwards: nothing changes, because
+            the extension is purely cosmetic and decryption works with any file name. The
+            original file name is not written in the clear either — it is encrypted together
+            with the file contents, so a <code>.foss</code> file on a flash drive or in an
+            email attachment reveals nothing about what is inside until the correct password
+            is supplied.
         </p>
 
         <h2>Nothing leaves your device</h2>
